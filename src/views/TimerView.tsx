@@ -2,15 +2,17 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Play, RotateCcw, TrendingUp, Flame, Lock, Target, ChevronRight, CheckCircle2 } from 'lucide-react';
 import { ViewState, Task } from '../types';
+import { UserProfile } from '../App';
 
 interface TimerViewProps {
   key?: string;
   setView: (v: ViewState) => void;
   tasks: Task[];
   toggleTask: (id: string) => void;
+  profile: UserProfile | null;
 }
 
-export function TimerView({ setView, tasks, toggleTask }: TimerViewProps) {
+export function TimerView({ setView, tasks, toggleTask, profile }: TimerViewProps) {
   const [timeLeft, setTimeLeft] = useState(0);
   const [isActive, setIsActive] = useState(false);
   const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
@@ -67,12 +69,12 @@ export function TimerView({ setView, tasks, toggleTask }: TimerViewProps) {
       <header className="fixed top-0 w-full z-40 flex items-center justify-between px-6 py-4 bg-surface/80 backdrop-blur-md border-b border-primary/5">
          <div className="flex items-center gap-3">
           <button onClick={() => setView('PROFILE')} className="w-10 h-10 rounded-full overflow-hidden border-2 border-primary/20 active:scale-95 transition-transform">
-             <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuBvp1ffCwW-nzy23N6M-C-3RZDONszscXG_F9SEdU7O1SDM7ypyMpZoJIUtmG2fL6vewmgZ-Lhgw0FIvwXLutoarNtHyzq4Vyob7t36bcsNmpQotZuF6-OXvxTLum5IZBefFuvydXpFAXLARXgF6G71a0y_jAZUWcDjyrGyRglBb9thJhRpHgil_MGjAfI07-Mlif-TwyCQ4B_pgEtpga1AlQls54qAgnNsbKv8bhwFgS7uo5bu88V1FcUFwNm8RbDnss7kyMuuDg" alt="Avatar" className="w-full h-full object-cover" />
+             <img src={profile?.avatar || "https://lh3.googleusercontent.com/aida-public/AB6AXuBvp1ffCwW-nzy23N6M-C-3RZDONszscXG_F9SEdU7O1SDM7ypyMpZoJIUtmG2fL6vewmgZ-Lhgw0FIvwXLutoarNtHyzq4Vyob7t36bcsNmpQotZuF6-OXvxTLum5IZBefFuvydXpFAXLARXgF6G71a0y_jAZUWcDjyrGyRglBb9thJhRpHgil_MGjAfI07-Mlif-TwyCQ4B_pgEtpga1AlQls54qAgnNsbKv8bhwFgS7uo5bu88V1FcUFwNm8RbDnss7kyMuuDg"} alt="Avatar" className="w-full h-full object-cover" />
           </button>
           <span className="font-extrabold text-lg text-primary tracking-tight">TaskFlow</span>
         </div>
         <div className="bg-primary/10 px-3 py-1 rounded-full">
-            <span className="text-primary font-semibold text-sm">Lvl 12</span>
+            <span className="text-primary font-semibold text-sm">Lvl {profile?.nivel || 1}</span>
         </div>
       </header>
 

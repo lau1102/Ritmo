@@ -1,8 +1,33 @@
+import { useState } from 'react';
 import { motion } from 'motion/react';
-import { Menu, BadgeCheck, Pencil, Sunrise, Moon, LogOut } from 'lucide-react';
+import { Menu, BadgeCheck, Pencil, Sunrise, Moon, LogOut, Check, X } from 'lucide-react';
 import { ViewState } from '../types';
 
-export function SettingsView({ setView }: { key?: string, setView: (v: ViewState) => void }) {
+import { UserProfile } from '../App';
+
+interface SettingsViewProps {
+  key?: string;
+  setView: (v: ViewState) => void;
+  profile: UserProfile | null;
+  updateProfileName: (name: string) => Promise<void>;
+}
+
+export function SettingsView({ setView, profile, updateProfileName }: SettingsViewProps) {
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [tempName, setTempName] = useState(profile?.nombre || '');
+
+  const handleSaveName = async () => {
+    if (tempName.trim()) {
+      await updateProfileName(tempName.trim());
+      setIsEditingName(false);
+    }
+  };
+
+  const handleCancelName = () => {
+    setTempName(profile?.nombre || '');
+    setIsEditingName(false);
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -18,7 +43,7 @@ export function SettingsView({ setView }: { key?: string, setView: (v: ViewState
           <h1 className="font-bold text-xl text-primary">Productivity</h1>
         </div>
         <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-primary/20">
-            <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuCUnS9FEY6U0wZOcIdh5XRMuR_OwCWsfCUyVHFja2-JhtFROwjEoRDqVI7MFMdUo47xHlSwrhKIDol4dqOFq_SZqn7aIe7MmvhX8NXShP3HU-BRlSFoTENF4vSn7-D0F9pI7ONSlePFVU-9QsXe6J2P0jC74yEpjq9aPDmI0p3nV4x0iWM1QamrUNr01EkrDqN3nYGiJBfgJ2UWvzhlCNNuajZVZs9L4UIALMnJTRyPATEAutJQf0a-64wqlsPODKG36_aZpo_Vgw" alt="Profile" className="w-full h-full object-cover" />
+            <img src={profile?.avatar || "https://lh3.googleusercontent.com/aida-public/AB6AXuCUnS9FEY6U0wZOcIdh5XRMuR_OwCWsfCUyVHFja2-JhtFROwjEoRDqVI7MFMdUo47xHlSwrhKIDol4dqOFq_SZqn7aIe7MmvhX8NXShP3HU-BRlSFoTENF4vSn7-D0F9pI7ONSlePFVU-9QsXe6J2P0jC74yEpjq9aPDmI0p3nV4x0iWM1QamrUNr01EkrDqN3nYGiJBfgJ2UWvzhlCNNuajZVZs9L4UIALMnJTRyPATEAutJQf0a-64wqlsPODKG36_aZpo_Vgw"} alt="Profile" className="w-full h-full object-cover" />
         </div>
       </header>
 
@@ -34,8 +59,12 @@ export function SettingsView({ setView }: { key?: string, setView: (v: ViewState
             
             <button onClick={() => setView('ICONS')} className="w-full bg-white p-4 rounded-[24px] shadow-[0_4px_20px_rgba(0,0,0,0.02)] flex items-center justify-between hover:bg-surface-container/50 active:scale-[0.98] transition-all group border border-primary/5">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                  <BadgeCheck className="w-6 h-6" />
+                <div className="w-12 h-12 rounded-full overflow-hidden bg-primary/10 flex items-center justify-center text-primary">
+                  {profile?.avatar?.startsWith('/iconos/') ? (
+                    <img src={profile.avatar} className="w-8 h-8" />
+                  ) : (
+                    <BadgeCheck className="w-6 h-6" />
+                  )}
                 </div>
                 <div className="text-left">
                   <p className="font-bold text-base text-on-surface">Icono de perfil</p>
@@ -46,18 +75,42 @@ export function SettingsView({ setView }: { key?: string, setView: (v: ViewState
             </button>
 
             <div className="bg-white p-4 rounded-[24px] shadow-[0_4px_20px_rgba(0,0,0,0.02)] flex items-center justify-between border border-primary/5">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-surface-container flex items-center justify-center text-primary">
+              <div className="flex items-center gap-4 flex-1">
+                <div className="w-12 h-12 rounded-full bg-surface-container flex items-center justify-center text-primary flex-shrink-0">
                   <BadgeCheck className="w-6 h-6" />
                 </div>
-                <div>
-                  <p className="font-bold text-base text-on-surface">Nombre</p>
-                  <p className="text-base font-bold text-primary">Laura Mejía</p>
+                <div className="flex-1">
+                  <p className="font-bold text-xs text-outline uppercase tracking-tighter">Nombre</p>
+                  {isEditingName ? (
+                    <input
+                      type="text"
+                      value={tempName}
+                      onChange={(e) => setTempName(e.target.value)}
+                      autoFocus
+                      className="w-full bg-transparent font-bold text-primary text-base outline-none border-b-2 border-primary/20 focus:border-primary"
+                    />
+                  ) : (
+                    <p className="text-base font-bold text-primary truncate">{profile?.nombre || profile?.email?.split('@')[0] || 'Usuario'}</p>
+                  )}
                 </div>
               </div>
-              <button className="w-10 h-10 rounded-[14px] bg-primary/5 flex items-center justify-center text-primary hover:bg-primary/10 transition-colors active:scale-95">
-                <Pencil className="w-5 h-5" />
-              </button>
+              {isEditingName ? (
+                <div className="flex gap-1">
+                  <button onClick={handleSaveName} className="p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors">
+                    <Check className="w-5 h-5" />
+                  </button>
+                  <button onClick={handleCancelName} className="p-2 text-outline hover:bg-surface-container rounded-lg transition-colors">
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+              ) : (
+                <button 
+                  onClick={() => setIsEditingName(true)}
+                  className="w-10 h-10 rounded-[14px] bg-primary/5 flex items-center justify-center text-primary hover:bg-primary/10 transition-colors active:scale-95"
+                >
+                  <Pencil className="w-5 h-5" />
+                </button>
+              )}
             </div>
 
           </div>

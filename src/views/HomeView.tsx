@@ -62,7 +62,7 @@ export function HomeView({ setView, selectedMascotId, tasks, addTask, toggleTask
       <div className="px-6 pt-6 space-y-8 flex-1">
         <section className="flex flex-col items-center text-center space-y-4">
           <div>
-            <p className="text-secondary font-semibold text-sm">Buenos días, {profile?.nombre?.split(' ')[0] || 'Ritmo'}</p>
+            <p className="text-secondary font-semibold text-sm">Buenos días, {profile?.nombre?.split(' ')[0] || profile?.email?.split('@')[0] || 'Usuario'}</p>
             <h2 className="text-[30px] leading-tight font-extrabold text-on-surface tracking-tight mt-1">¿Qué vas a lograr hoy?</h2>
           </div>
           

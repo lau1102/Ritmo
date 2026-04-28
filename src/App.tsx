@@ -337,6 +337,32 @@ export default function App() {
     }
   };
 
+  const updateProfileName = async (newName: string) => {
+    if (!user || !profile) return;
+    
+    const { error } = await supabase
+      .from('usuarios')
+      .update({ nombre: newName })
+      .eq('id', user.id);
+
+    if (!error) {
+      setProfile({ ...profile, nombre: newName });
+    }
+  };
+
+  const updateProfileAvatar = async (newAvatar: string) => {
+    if (!user || !profile) return;
+    
+    const { error } = await supabase
+      .from('usuarios')
+      .update({ avatar: newAvatar })
+      .eq('id', user.id);
+
+    if (!error) {
+      setProfile({ ...profile, avatar: newAvatar });
+    }
+  };
+
   return (
     <div className="relative min-h-screen w-full max-w-md mx-auto bg-surface overflow-x-hidden font-sans shadow-2xl">
       <AnimatePresence mode="wait">
@@ -357,11 +383,11 @@ export default function App() {
             profile={profile}
           />
         )}
-        {view === 'TIMER' && <TimerView key="timer" setView={setView} tasks={tasks} toggleTask={toggleTask} />}
-        {view === 'STATS' && <StatsView key="stats" setView={setView} />}
-        {view === 'PROFILE' && <ProfileView key="profile" setView={setView} selectedMascotId={selectedMascotId} profile={profile} />}
-        {view === 'SETTINGS' && <SettingsView key="settings" setView={setView} />}
-        {view === 'ICONS' && <IconsView key="icons" setView={setView} />}
+        {view === 'TIMER' && <TimerView key="timer" setView={setView} tasks={tasks} toggleTask={toggleTask} profile={profile} />}
+        {view === 'STATS' && <StatsView key="stats" setView={setView} profile={profile} />}
+        {view === 'PROFILE' && <ProfileView key="profile" setView={setView} selectedMascotId={selectedMascotId} profile={profile} updateProfileName={updateProfileName} />}
+        {view === 'SETTINGS' && <SettingsView key="settings" setView={setView} profile={profile} updateProfileName={updateProfileName} />}
+        {view === 'ICONS' && <IconsView key="icons" setView={setView} profile={profile} updateProfileAvatar={updateProfileAvatar} />}
       </AnimatePresence>
       <BottomNav view={view} setView={setView} />
     </div>

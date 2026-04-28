@@ -1,5 +1,6 @@
+import { useState } from 'react';
 import { motion } from 'motion/react';
-import { Settings, CheckCircle2, Timer, Flame, Medal, Lock } from 'lucide-react';
+import { Settings, CheckCircle2, Timer, Flame, Medal, Lock, Edit2, Check, X } from 'lucide-react';
 import { ViewState } from '../types';
 import { mascotas } from '../data/mascots';
 import { UserProfile } from '../App';
@@ -9,10 +10,25 @@ interface ProfileViewProps {
   setView: (v: ViewState) => void;
   selectedMascotId: string;
   profile: UserProfile | null;
+  updateProfileName: (name: string) => Promise<void>;
 }
 
-export function ProfileView({ setView, selectedMascotId, profile }: ProfileViewProps) {
+export function ProfileView({ setView, selectedMascotId, profile, updateProfileName }: ProfileViewProps) {
   const currentMascot = mascotas.find(m => m.id === selectedMascotId) || mascotas[0];
+  const [isEditing, setIsEditing] = useState(false);
+  const [tempName, setTempName] = useState(profile?.nombre || '');
+
+  const handleSave = async () => {
+    if (tempName.trim()) {
+      await updateProfileName(tempName.trim());
+      setIsEditing(false);
+    }
+  };
+
+  const handleCancel = () => {
+    setTempName(profile?.nombre || '');
+    setIsEditing(false);
+  };
 
   return (
     <motion.div
@@ -27,7 +43,7 @@ export function ProfileView({ setView, selectedMascotId, profile }: ProfileViewP
         </button>
         <h1 className="font-bold text-xl tracking-tight text-primary">Mi Perfil</h1>
         <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-primary/20">
-          <img src={profile?.avatar || "https://lh3.googleusercontent.com/aida-public/AB6AXuDQHCyKkR8H08YvnjbYholL8bdoH7JTIwN1-GOgAFtkrnq-jHKVUtoOLTJpUyllTry1jXvTVx7NXU703l0YmDOM0vafTpQcDi7pTwWfHNggbfN_tHowdpYdzBPoA8XhtQJDTilBNzXowMPZ8wAwCuLz4UNcSeSd5e7NKqksh92zeL4uS-q0imQPGXWXKw_CZ52FpKFmTs02T8rrfnGRyjwGF8-KpACqHPBQh_2dDCRCGGJD8y4Rcv0P7IrhuTaXNdUvAMwH3Meebg"} alt="Avatar min" className="w-full h-full object-cover" />
+          <img src={profile?.avatar || "https://lh3.googleusercontent.com/aida-public/AB6AXuCUnS9FEY6U0wZOcIdh5XRMuR_OwCWsfCUyVHFja2-JhtFROwjEoRDqVI7MFMdUo47xHlSwrhKIDol4dqOFq_SZqn7aIe7MmvhX8NXShP3HU-BRlSFoTENF4vSn7-D0F9pI7ONSlePFVU-9QsXe6J2P0jC74yEpjq9aPDmI0p3nV4x0iWM1QamrUNr01EkrDqN3nYGiJBfgJ2UWvzhlCNNuajZVZs9L4UIALMnJTRyPATEAutJQf0a-64wqlsPODKG36_aZpo_Vgw"} alt="Avatar min" className="w-full h-full object-cover" />
         </div>
       </header>
 
@@ -41,9 +57,42 @@ export function ProfileView({ setView, selectedMascotId, profile }: ProfileViewP
               <CheckCircle2 className="w-4 h-4 fill-white text-primary" />
             </div>
           </div>
-          <div className="pt-2">
-            <h2 className="font-display text-3xl font-extrabold text-on-surface -tracking-tight">{profile?.nombre || 'Laura Mejía'}</h2>
-            <p className="font-semibold text-sm text-outline">{profile?.email || 'laura.mejia@example.com'}</p>
+          <div className="pt-2 w-full px-4">
+            {isEditing ? (
+              <div className="flex flex-col items-center gap-3">
+                <input
+                  type="text"
+                  value={tempName}
+                  onChange={(e) => setTempName(e.target.value)}
+                  autoFocus
+                  className="w-full bg-surface-container text-center font-display text-2xl font-extrabold text-on-surface p-2 rounded-2xl outline-none border-2 border-primary/20 focus:border-primary transition-all"
+                />
+                <div className="flex gap-2">
+                  <button 
+                    onClick={handleSave}
+                    className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-xl font-bold text-sm shadow-sm active:scale-95 transition-transform"
+                  >
+                    <Check className="w-4 h-4" /> Guardar
+                  </button>
+                  <button 
+                    onClick={handleCancel}
+                    className="flex items-center gap-2 bg-surface-container text-outline px-4 py-2 rounded-xl font-bold text-sm active:scale-95 transition-transform"
+                  >
+                    <X className="w-4 h-4" /> Cancelar
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="group relative inline-block cursor-pointer" onClick={() => setIsEditing(true)}>
+                <h2 className="font-display text-3xl font-extrabold text-on-surface -tracking-tight pr-8">
+                  {profile?.nombre || 'Mi Perfil'}
+                </h2>
+                <div className="absolute right-0 top-1/2 -translate-y-1/2 p-2 text-outline/30 group-hover:text-primary transition-colors">
+                  <Edit2 className="w-4 h-4" />
+                </div>
+              </div>
+            )}
+            <p className="font-semibold text-sm text-outline mt-1">{profile?.email || ''}</p>
           </div>
         </section>
 

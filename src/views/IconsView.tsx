@@ -1,22 +1,34 @@
 import { motion } from 'motion/react';
-import { ArrowLeft, Star, Moon, Zap, Waves, Flame, Flower2, Leaf, Target, Bird, Rabbit, Rainbow, Globe } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { ViewState } from '../types';
+import { UserProfile } from '../App';
 
-export function IconsView({ setView }: { key?: string, setView: (v: ViewState) => void }) {
+interface IconsViewProps {
+  key?: string;
+  setView: (v: ViewState) => void;
+  profile: UserProfile | null;
+  updateProfileAvatar: (avatar: string) => Promise<void>;
+}
+
+export function IconsView({ setView, profile, updateProfileAvatar }: IconsViewProps) {
   const icons = [
-    { id: 'star', icon: Star, active: true },
-    { id: 'moon', icon: Moon },
-    { id: 'zap', icon: Zap },
-    { id: 'waves', icon: Waves },
-    { id: 'flame', icon: Flame },
-    { id: 'flower', icon: Flower2 },
-    { id: 'leaf', icon: Leaf },
-    { id: 'target', icon: Target },
-    { id: 'bird', icon: Bird },
-    { id: 'rabbit', icon: Rabbit },
-    { id: 'rainbow', icon: Rainbow },
-    { id: 'globe', icon: Globe },
+    { id: 'corazon_1', path: '/iconos/Corazon_1.svg' },
+    { id: 'corazon_2', path: '/iconos/Corazon_2.svg' },
+    { id: 'estrella_1', path: '/iconos/Estrella_1.svg' },
+    { id: 'estrella_2', path: '/iconos/Estrella_2.svg' },
+    { id: 'flor_1', path: '/iconos/Flor_1.svg' },
+    { id: 'flor_2', path: '/iconos/Flor_2.svg' },
+    { id: 'luna_1', path: '/iconos/Luna_1.svg' },
+    { id: 'luna_2', path: '/iconos/Luna_2.svg' },
+    { id: 'nube_1', path: '/iconos/Nube_1.svg' },
+    { id: 'nube_2', path: '/iconos/Nube_2.svg' },
+    { id: 'sol_1', path: '/iconos/Sol_1.svg' },
+    { id: 'sol_2', path: '/iconos/Sol_2.svg' },
   ];
+
+  const handleSelectIcon = async (path: string) => {
+    await updateProfileAvatar(path);
+  };
 
   return (
     <motion.div
@@ -38,9 +50,13 @@ export function IconsView({ setView }: { key?: string, setView: (v: ViewState) =
       <main className="w-full max-w-md px-6 pt-24 pb-32 flex flex-col items-center">
         <section className="w-full flex flex-col items-center mb-10">
           <div className="relative group">
-            <div className="w-36 h-36 rounded-full bg-surface-container-low flex items-center justify-center shadow-sm relative z-10 border-4 border-white">
-              <div className="w-28 h-28 rounded-full bg-primary flex items-center justify-center">
-                <Star className="w-14 h-14 text-white fill-white" />
+            <div className="w-36 h-36 rounded-full bg-surface-container-low flex items-center justify-center shadow-sm relative z-10 border-4 border-white overflow-hidden">
+              <div className="w-28 h-28 flex items-center justify-center">
+                {profile?.avatar ? (
+                  <img src={profile.avatar} alt="Avatar Preview" className="w-full h-full object-contain" />
+                ) : (
+                  <div className="w-20 h-20 bg-primary/10 rounded-full" />
+                )}
               </div>
             </div>
             <div className="absolute -inset-4 bg-primary/10 rounded-full blur-2xl -z-0"></div>
@@ -52,15 +68,16 @@ export function IconsView({ setView }: { key?: string, setView: (v: ViewState) =
           <header className="mb-4">
             <h2 className="font-bold text-[11px] text-outline uppercase tracking-widest px-1">ELIGE UNO</h2>
           </header>
-          <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
+          <div className="grid grid-cols-3 gap-3">
             {icons.map((item) => {
-              const Icon = item.icon;
+              const isActive = profile?.avatar === item.path;
               return (
                 <button 
                   key={item.id}
-                  className={`aspect-square bg-white rounded-[24px] flex items-center justify-center transition-all active:scale-90 duration-200 border shadow-sm ${item.active ? 'border-primary ring-2 ring-primary/20 bg-primary/5' : 'border-primary/5 hover:bg-surface-container'}`}
+                  onClick={() => handleSelectIcon(item.path)}
+                  className={`aspect-square bg-white rounded-[24px] flex items-center justify-center transition-all active:scale-90 duration-200 border p-4 shadow-sm ${isActive ? 'border-primary ring-2 ring-primary/20 bg-primary/5' : 'border-primary/5 hover:bg-surface-container'}`}
                 >
-                  <Icon className={`w-8 h-8 ${item.active ? 'text-primary fill-primary' : 'text-secondary'}`} />
+                  <img src={item.path} alt={item.id} className={`w-full h-full object-contain ${isActive ? '' : 'opacity-80'}`} />
                 </button>
               )
             })}

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Settings, Check, X, Trophy, Droplet, BookOpen, Dumbbell, Clock } from 'lucide-react';
 import { ViewState } from '../types';
+import { UserProfile } from '../App';
 
 function MorningTab() {
   return (
@@ -138,7 +139,7 @@ function NightTab() {
   )
 }
 
-export function StatsView({ setView }: { key?: string, setView: (v: ViewState) => void }) {
+export function StatsView({ setView, profile }: { key?: string, setView: (v: ViewState) => void, profile: UserProfile | null }) {
   const [activeTab, setActiveTab] = useState<'MORNING' | 'HABITS' | 'NIGHT'>('MORNING');
 
   return (
@@ -151,8 +152,8 @@ export function StatsView({ setView }: { key?: string, setView: (v: ViewState) =
       <header className="bg-surface/90 backdrop-blur-md border-b border-primary/5 fixed top-0 w-full z-50 flex flex-col px-5 pt-4 pb-4 max-w-md mx-auto left-1/2 -translate-x-1/2">
          <div className="flex items-center justify-between mb-4 px-1">
           <div className="flex items-center gap-3">
-             <div className="w-10 h-10 rounded-full overflow-hidden bg-primary/10">
-               <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuCX1BsGrm-ZscpOi-r308EaHgs3D3j4LEgGXlgIE3fdngYnO9hgmOJ5dvfJgWAPTUL62xSVbiudR0VqFvHV6ViJbRtvKKpKCGOJG2tZTtPumjpsAM4JdalWJElH-FmBkYHutH3GpcaRHv8z7j7DJLg0cNqpeR3IuvOjpOtYHfuSYja88aDTqLBcBGr7e90V9kLcy8VyTnMnyz_eAEqNk4pY-eyxwFfMPnX7TfE0ThqWA6AO0XTw0eHUzphr7J1c_3bmAhqWIZt12w" alt="Avatar" className="w-full h-full object-cover" />
+             <div className="w-10 h-10 rounded-full overflow-hidden bg-primary/10 border-2 border-primary/20">
+               <img src={profile?.avatar || "https://lh3.googleusercontent.com/aida-public/AB6AXuCX1BsGrm-ZscpOi-r308EaHgs3D3j4LEgGXlgIE3fdngYnO9hgmOJ5dvfJgWAPTUL62xSVbiudR0VqFvHV6ViJbRtvKKpKCGOJG2tZTtPumjpsAM4JdalWJElH-FmBkYHutH3GpcaRHv8z7j7DJLg0cNqpeR3IuvOjpOtYHfuSYja88aDTqLBcBGr7e90V9kLcy8VyTnMnyz_eAEqNk4pY-eyxwFfMPnX7TfE0ThqWA6AO0XTw0eHUzphr7J1c_3bmAhqWIZt12w"} alt="Avatar" className="w-full h-full object-cover" />
              </div>
              <h1 className="font-extrabold text-xl text-primary tracking-tight">Rutinas</h1>
           </div>
