@@ -39,7 +39,12 @@ export function RegisterView({ setView }: { key?: string, setView: (v: ViewState
               id: authData.user.id, 
               nombre: name, 
               email: email, 
-              avatar: selectedAvatar 
+              avatar: selectedAvatar,
+              nivel: 1,
+              xp: 0,
+              racha: 0,
+              tareas_completadas: 0,
+              habitos_completados: 0
             }
           ]);
 

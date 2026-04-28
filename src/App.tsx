@@ -25,6 +25,11 @@ export interface UserProfile {
   nombre: string;
   avatar: string;
   email: string;
+  nivel: number;
+  xp: number;
+  racha: number;
+  tareas_completadas: number;
+  habitos_completados: number;
 }
 
 export default function App() {
@@ -42,19 +47,27 @@ export default function App() {
   // Auth Listener
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      if (session?.user) fetchProfile(session.user.id);
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
       if (session?.user) {
+        setUser(session.user);
         fetchProfile(session.user.id);
         fetchTasks(session.user.id);
         fetchHabits(session.user.id);
+        setView('HOME'); // Navegación directa al estar logueado
+      }
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session?.user) {
+        setUser(session.user);
+        fetchProfile(session.user.id);
+        fetchTasks(session.user.id);
+        fetchHabits(session.user.id);
+        if (event === 'SIGNED_IN') setView('HOME'); // Navegación directa al loguear
       } else {
+        setUser(null);
         setProfile(null);
         setTasks([]);
+        if (event === 'SIGNED_OUT') setView('LOGIN');
       }
     });
 
@@ -67,11 +80,93 @@ export default function App() {
       .select('*')
       .eq('id', userId)
       .single();
-    if (data) setProfile(data);
+    
+    if (data) {
+      setProfile(data);
+    } else if (error && error.code === 'PGRST116') {
+      // Si el perfil no existe, lo creamos (importante para usuarios antiguos o fallos en registro)
+      const { data: newData, error: createError } = await supabase
+        .from('usuarios')
+        .insert([{ 
+          id: userId, 
+          nombre: user?.email?.split('@')[0] || 'Usuario', 
+          email: user?.email,
+          nivel: 1,
+          xp: 0,
+          racha: 0,
+          tareas_completadas: 0,
+          habitos_completados: 0,
+          avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuCUnS9FEY6U0wZOcIdh5XRMuR_OwCWsfCUyVHFja2-JhtFROwjEoRDqVI7MFMdUo47xHlSwrhKIDol4dqOFq_SZqn7aIe7MmvhX8NXShP3HU-BRlSFoTENF4vSn7-D0F9pI7ONSlePFVU-9QsXe6J2P0jC74yEpjq9aPDmI0p3nV4x0iWM1QamrUNr01EkrDqN3nYGiJBfgJ2UWvzhlCNNuajZVZs9L4UIALMnJTRyPATEAutJQf0a-64wqlsPODKG36_aZpo_Vgw"
+        }])
+        .select()
+        .single();
+      
+      if (newData) setProfile(newData);
+      if (createError) console.error("Error creando perfil:", createError);
+    }
+  };
+
+  const addXP = async (amount: number) => {
+    if (!user) return;
+
+    setProfile(current => {
+      // Si no hay perfil, usamos valores por defecto
+      const baseProfile = current || { nivel: 1, xp: 0, tareas_completadas: 0 };
+      
+      let newXP = (baseProfile.xp || 0) + amount;
+      let newLevel = baseProfile.nivel || 1;
+      let tareasCompletadas = baseProfile.tareas_completadas || 0;
+
+      if (amount > 0) {
+        tareasCompletadas += 1;
+      } else {
+        tareasCompletadas = Math.max(0, tareasCompletadas - 1);
+      }
+      
+      // Lógica de Subida de Nivel
+      let xpRequired = newLevel * 50;
+      while (newXP >= xpRequired) {
+        newXP -= xpRequired;
+        newLevel++;
+        xpRequired = newLevel * 50;
+      }
+
+      // Lógica de Bajada de Nivel
+      while (newXP < 0 && newLevel > 1) {
+        newLevel--;
+        xpRequired = newLevel * 50;
+        newXP += xpRequired;
+      }
+      
+      if (newXP < 0) newXP = 0;
+
+      const updated = { 
+        ...current, 
+        id: user.id,
+        xp: newXP, 
+        nivel: newLevel,
+        tareas_completadas: tareasCompletadas
+      } as UserProfile;
+
+      // Sincronizar con Supabase
+      supabase
+        .from('usuarios')
+        .update({ 
+          xp: updated.xp, 
+          nivel: updated.nivel,
+          tareas_completadas: updated.tareas_completadas
+        })
+        .eq('id', user.id)
+        .then(({ error }) => {
+          if (error) console.error("Error syncing XP/Level:", error);
+        });
+
+      return updated;
+    });
   };
 
   const fetchTasks = async (userId: string) => {
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from('tareas')
       .select('*')
       .eq('usuario_id', userId)
@@ -87,10 +182,11 @@ export default function App() {
   };
 
   const fetchHabits = async (userId: string) => {
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from('habitos')
       .select('*')
       .eq('usuario_id', userId);
+    
     if (data && data.length > 0) {
       setHabits(data.map((h: any) => ({
         id: h.id,
@@ -103,25 +199,42 @@ export default function App() {
   const addTask = async (text: string) => {
     if (!text.trim() || !user) return;
     
-    const { data, error } = await supabase
-      .from('tareas')
-      .insert([
-        { 
-          texto: text.trim(), 
-          completada: false, 
-          usuario_id: user.id 
-        }
-      ])
-      .select();
+    const tempId = Math.random().toString(36).substring(7);
+    const newTask: Task = {
+      id: tempId,
+      text: text.trim(),
+      completed: false,
+      usuario_id: user.id
+    };
+    
+    // Update UI immediately (optimistic)
+    setTasks(prev => [newTask, ...prev]);
 
-    if (data) {
-      const newTask: Task = {
-        id: data[0].id,
-        text: data[0].texto,
-        completed: data[0].completada,
-        usuario_id: data[0].usuario_id
-      };
-      setTasks([newTask, ...tasks]);
+    try {
+      const { data, error } = await supabase
+        .from('tareas')
+        .insert([
+          { 
+            texto: text.trim(), 
+            completada: false, 
+            usuario_id: user.id 
+          }
+        ])
+        .select();
+
+      if (error) {
+        console.error("Error adding task:", error);
+        return;
+      }
+
+      if (data && data.length > 0) {
+        setTasks(prev => prev.map(t => t.id === tempId ? {
+          ...t,
+          id: data[0].id
+        } : t));
+      }
+    } catch (err) {
+      console.error("Unexpected error adding task:", err);
     }
   };
 
@@ -129,47 +242,99 @@ export default function App() {
     const task = tasks.find(t => t.id === id);
     if (!task) return;
 
-    const { error } = await supabase
-      .from('tareas')
-      .update({ completada: !task.completed })
-      .eq('id', id);
+    // Optimistic update
+    const newStatus = !task.completed;
+    setTasks(prev => prev.map(t => 
+      t.id === id ? { ...t, completed: newStatus } : t
+    ));
 
-    if (!error) {
-      setTasks(tasks.map(t => 
-        t.id === id ? { ...t, completed: !t.completed } : t
-      ));
+    // Sumar o restar XP (Inmediato)
+    if (newStatus) {
+      addXP(10);
+    } else {
+      addXP(-10);
+    }
+
+    // Si es un ID temporal, ya actualizamos localmente.
+    // El sync real de la tarea se hará cuando tenga ID de base de datos.
+    if (id.length < 20) return;
+
+    try {
+      const { error } = await supabase
+        .from('tareas')
+        .update({ completada: newStatus })
+        .eq('id', id);
+
+      if (error) {
+        console.error("Error updating task:", error);
+        // Rollback local si falla la base de datos
+        setTasks(prev => prev.map(t => 
+          t.id === id ? { ...t, completed: !newStatus } : t
+        ));
+        if (newStatus) addXP(-10); else addXP(10);
+        return;
+      }
+    } catch (err) {
+      console.error("Unexpected error updating task:", err);
     }
   };
 
   const deleteTask = async (id: string) => {
-    const { error } = await supabase
-      .from('tareas')
-      .delete()
-      .eq('id', id);
+    // If it's a temp ID, just remove locally
+    if (id.length < 20) {
+      setTasks(prev => prev.filter(task => task.id !== id));
+      return;
+    }
 
-    if (!error) {
-      setTasks(tasks.filter(task => task.id !== id));
+    // Optimistic delete
+    const previousTasks = [...tasks];
+    setTasks(prev => prev.filter(task => task.id !== id));
+
+    try {
+      const { error } = await supabase
+        .from('tareas')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        console.error("Error deleting task:", error);
+        setTasks(previousTasks);
+      }
+    } catch (err) {
+      console.error("Unexpected error deleting task:", err);
+      setTasks(previousTasks);
     }
   };
 
   const toggleHabit = async (id: string) => {
-    if (!user) return;
+    if (!user || !profile) return;
     const habit = habits.find(h => h.id === id);
     if (!habit) return;
+
+    const newStatus = !habit.completed;
 
     const { error } = await supabase
       .from('habitos')
       .upsert({ 
-        id: id.length > 10 ? id : undefined, // Check if it's a real UUID or mock
+        id: id.length > 20 ? id : undefined, 
         nombre: habit.name,
-        completado: !habit.completed,
+        completado: newStatus,
         usuario_id: user.id
       })
       .select();
 
-    setHabits(habits.map(h => 
-      h.id === id ? { ...h, completed: !h.completed } : h
-    ));
+    if (!error) {
+      setHabits(habits.map(h => 
+        h.id === id ? { ...h, completed: newStatus } : h
+      ));
+      
+      if (newStatus) {
+        // Podríamos sumar XP por hábitos también si el usuario lo desea, 
+        // pero por ahora solo el perfil cuenta tareas.
+        await supabase.from('usuarios').update({ habitos_completados: profile.habitos_completados + 1 }).eq('id', user.id);
+        fetchProfile(user.id);
+      }
+    }
   };
 
   return (

@@ -51,21 +51,26 @@ export function ProfileView({ setView, selectedMascotId, profile }: ProfileViewP
           <div className="flex justify-between items-end mb-4">
             <div>
               <span className="font-bold text-[11px] text-primary uppercase tracking-widest">Progreso Actual</span>
-              <h3 className="font-bold text-xl mt-1 text-on-surface">Nivel 12 - Constante</h3>
+              <h3 className="font-bold text-xl mt-1 text-on-surface">Nivel {profile?.nivel || 1} - Constante</h3>
             </div>
-            <p className="font-bold text-xs text-primary">1,240 / 1,500 XP</p>
+            <p className="font-bold text-xs text-primary">{profile?.xp || 0} / {(profile?.nivel || 1) * 50} XP</p>
           </div>
-          <div className="w-full bg-surface-container-high rounded-full h-3">
-            <motion.div initial={{ width: 0 }} animate={{ width: '82%' }} transition={{ duration: 1 }} className="bg-primary h-3 rounded-full"></motion.div>
+          <div className="w-full bg-surface-container-high rounded-full h-3 overflow-hidden">
+            <motion.div 
+              initial={{ width: 0 }} 
+              animate={{ width: `${Math.min(((profile?.xp || 0) / ((profile?.nivel || 1) * 50)) * 100, 100)}%` }} 
+              transition={{ duration: 1 }} 
+              className="bg-primary h-3 rounded-full"
+            />
           </div>
         </section>
 
         <div className="grid grid-cols-2 gap-4">
           {[
-            { icon: CheckCircle2, val: '47', label: 'tareas totales' },
-            { icon: Timer, val: '83h', label: 'tiempo enfocado' },
-            { icon: Flame, val: '5', label: 'racha actual' },
-            { icon: Medal, val: '12', label: 'racha récord' },
+            { icon: CheckCircle2, val: profile?.tareas_completadas || 0, label: 'tareas totales' },
+            { icon: Flame, val: profile?.racha || 0, label: 'racha actual' },
+            { icon: Medal, val: profile?.habitos_completados || 0, label: 'hábitos' },
+            { icon: Timer, val: '0h', label: 'tiempo total' },
           ].map((stat, i) => {
             const Icon = stat.icon;
             return (
@@ -84,29 +89,21 @@ export function ProfileView({ setView, selectedMascotId, profile }: ProfileViewP
 
         <section className="space-y-4">
           <h3 className="font-bold text-[11px] text-outline uppercase tracking-widest px-2">Logros</h3>
-          <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide px-2">
-            
-            <div className="flex-none w-36 aspect-square bg-surface-container-lowest rounded-[32px] flex flex-col items-center justify-center p-4 text-center border border-primary/5 shadow-sm">
-              <div className="w-14 h-14 bg-amber-100 rounded-full flex items-center justify-center mb-3">
-                <Medal className="w-7 h-7 text-amber-600 fill-amber-600/20" />
+          <div className="flex gap-4 overflow-x-auto pb-6 scrollbar-hide px-2">
+            {[
+              { label: '7 días seguidos' },
+              { label: '50 tareas' },
+              { label: 'Maestría' },
+              { label: 'Explorador' },
+              { label: 'Enfoque Total' }
+            ].map((ach, i) => (
+              <div key={i} className="flex-none w-36 aspect-square bg-surface-container-lowest rounded-[32px] flex flex-col items-center justify-center p-4 text-center border-2 border-dashed border-outline-variant/30 opacity-60">
+                <div className="w-14 h-14 bg-surface-container rounded-full flex items-center justify-center mb-3">
+                  <Lock className="w-6 h-6 text-outline/40" />
+                </div>
+                <p className="font-semibold text-xs leading-tight text-outline/60">{ach.label}</p>
               </div>
-              <p className="font-bold text-sm leading-tight text-on-surface">7 días seguidos</p>
-            </div>
-            
-            <div className="flex-none w-36 aspect-square bg-surface-container-lowest rounded-[32px] flex flex-col items-center justify-center p-4 text-center border border-primary/5 shadow-sm">
-              <div className="w-14 h-14 bg-sky-100 rounded-full flex items-center justify-center mb-3">
-                <CheckCircle2 className="w-7 h-7 text-sky-600 fill-sky-600/20" />
-              </div>
-              <p className="font-bold text-sm leading-tight text-on-surface">50 tareas</p>
-            </div>
-            
-            <div className="flex-none w-36 aspect-square bg-surface-container-lowest rounded-[32px] flex flex-col items-center justify-center p-4 text-center border-2 border-dashed border-outline-variant opacity-60">
-              <div className="w-14 h-14 bg-surface-container rounded-full flex items-center justify-center mb-3">
-                <Lock className="w-6 h-6 text-outline" />
-              </div>
-              <p className="font-semibold text-sm leading-tight text-secondary">100 tareas</p>
-            </div>
-
+            ))}
           </div>
         </section>
 
