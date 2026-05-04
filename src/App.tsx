@@ -237,7 +237,8 @@ export default function App() {
         id: t.id,
         text: t.nombre,
         completed: t.completada,
-        usuario_id: t.usuario_id
+        usuario_id: t.usuario_id,
+        fecha: t.fecha
       })));
     }
   };
@@ -282,11 +283,13 @@ export default function App() {
     if (!text.trim() || !user) return;
     
     const tempId = Math.random().toString(36).substring(7);
+    const today = new Date().toISOString().split('T')[0];
     const newTask: Task = {
       id: tempId,
       text: text.trim(),
       completed: false,
-      usuario_id: user.id
+      usuario_id: user.id,
+      fecha: today
     };
     
     // Update UI immediately (optimistic)
@@ -527,7 +530,7 @@ export default function App() {
           />
         )}
         {view === 'TIMER' && <TimerView key="timer" setView={setView} tasks={tasks} toggleTask={toggleTask} profile={profile} sessions={sessions} addSession={addSession} />}
-        {view === 'STATS' && <StatsView key="stats" setView={setView} profile={profile} habits={habits} toggleHabit={toggleHabit} weeklyHistory={weeklyHabitsHistory} />}
+        {view === 'STATS' && <StatsView key="stats" setView={setView} profile={profile} habits={habits} toggleHabit={toggleHabit} weeklyHistory={weeklyHabitsHistory} tasks={tasks} sessions={sessions} />}
         {view === 'PROFILE' && <ProfileView key="profile" setView={setView} selectedMascotId={selectedMascotId} profile={profile} updateProfileName={updateProfileName} />}
         {view === 'SETTINGS' && <SettingsView key="settings" setView={setView} profile={profile} updateProfileName={updateProfileName} />}
         {view === 'ICONS' && <IconsView key="icons" setView={setView} profile={profile} updateProfileAvatar={updateProfileAvatar} />}

@@ -1,11 +1,44 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Settings, Check, X, Trophy, Droplet, BookOpen, Dumbbell, Clock } from 'lucide-react';
-import { ViewState } from '../types';
+import { Settings, Check, X, Trophy, Clock, Target, Rocket, Coffee, Sun, Moon, CheckCircle2 } from 'lucide-react';
+import { ViewState, Task } from '../types';
 import { UserProfile } from '../App';
 import { Avatar } from '../components/Avatar';
 
-function MorningTab({ profile }: { profile: UserProfile | null, key?: string }) {
+function MorningTab({ profile, tasks, sessions, weeklyHistory }: { 
+  profile: UserProfile | null, 
+  tasks: Task[], 
+  sessions: any[], 
+  weeklyHistory: any[],
+  key?: string
+}) {
+  const today = new Date().toISOString().split('T')[0];
+  const pendingToday = tasks.filter(t => t.fecha === today && !t.completed);
+  
+  // Weekly check-in logic
+  const days = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
+  const now = new Date();
+  const d = now.getDay();
+  const mondayDiff = d === 0 ? -6 : 1 - d;
+  
+  const weeklyCheckins = days.map((day, index) => {
+    const dayDate = new Date(now);
+    dayDate.setDate(now.getDate() + mondayDiff + index);
+    const dateStr = dayDate.toISOString().split('T')[0];
+    
+    // Check if there's any record in sessions or weeklyHistory for this date
+    const hasSession = sessions.some(s => s.fecha === dateStr);
+    const hasHabit = weeklyHistory.some(h => h.fecha === dateStr);
+    const isFuture = dayDate > now && dateStr !== today;
+    
+    return {
+      day,
+      checked: hasSession || hasHabit,
+      isToday: dateStr === today,
+      isFuture
+    };
+  });
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -13,38 +46,64 @@ function MorningTab({ profile }: { profile: UserProfile | null, key?: string }) 
       exit={{ opacity: 0, y: -10 }}
       className="space-y-6"
     >
-      <header className="mb-2">
-        <h2 className="text-[24px] font-extrabold text-on-surface tracking-tight">Tus mañanas</h2>
+      <header className="flex items-center gap-3 mb-2">
+        <div className="w-10 h-10 bg-orange-100 rounded-xl flex items-center justify-center text-orange-500">
+          <Sun className="w-6 h-6" />
+        </div>
+        <div>
+          <h2 className="text-[22px] font-extrabold text-on-surface tracking-tight">Tu Mañana</h2>
+          <p className="text-secondary text-xs font-bold uppercase tracking-widest opacity-60">Planificación y hábitos</p>
+        </div>
       </header>
       
-      {/* Check-ins Realizados */}
+      {/* Racha Semanal */}
       <section className="bg-surface-container-lowest p-6 rounded-[24px] shadow-[0_4px_20px_-4px_rgba(83,81,162,0.04)] border border-primary/5">
-        <h3 className="text-[11px] font-bold text-outline uppercase tracking-widest mb-4">Check-ins Realizados</h3>
-        <div className="flex justify-between items-center mb-6 px-1">
-          {['L', 'M', 'X', 'J', 'V', 'S', 'D'].map((day) => {
-            const isChecked = false; // Reset to zero
-            return (
-              <div key={day} className="flex flex-col items-center gap-2">
-                <span className="text-[11px] font-bold text-outline">{day}</span>
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${isChecked ? 'bg-primary text-white' : 'bg-primary/5 text-outline-variant'}`}>
-                  {isChecked ? <Check className="w-4 h-4" /> : <X className="w-4 h-4 stroke-[3]" />}
-                </div>
+        <h3 className="text-[11px] font-bold text-outline uppercase tracking-widest mb-4">Check-in Semanal</h3>
+        <div className="flex justify-between items-center px-1">
+          {weeklyCheckins.map((item, idx) => (
+            <div key={idx} className="flex flex-col items-center gap-2">
+              <span className={`text-[11px] font-bold ${item.isToday ? 'text-primary' : 'text-outline/40'}`}>{item.day}</span>
+              <div className={`w-9 h-9 rounded-full flex items-center justify-center transition-all ${
+                item.checked 
+                ? 'bg-green-500 text-white shadow-sm' 
+                : item.isFuture
+                  ? 'bg-surface-container border border-outline/10 text-outline/20'
+                  : 'bg-red-50 text-red-300 border border-red-100'
+              }`}>
+                {item.checked ? <Check className="w-5 h-5 stroke-[3]" /> : (item.isFuture ? <div className="w-1.5 h-1.5 rounded-full bg-outline/20" /> : <X className="w-5 h-5 stroke-[3]" />)}
               </div>
-            );
-          })}
+            </div>
+          ))}
         </div>
-        <p className="text-secondary font-medium text-sm">Empieza a planear tu día mañana</p>
-        <div className="mt-4 w-full bg-surface-container-high h-2 rounded-full overflow-hidden">
-          <motion.div initial={{ width: 0 }} animate={{ width: '0%' }} transition={{ duration: 1 }} className="bg-primary h-full rounded-full" />
-        </div>
+        <p className="text-secondary font-medium text-xs mt-5 text-center px-4">
+          {weeklyCheckins.filter(c => c.checked).length >= 5 ? '¡Increíble constancia esta semana! 🔥' : 'Registra tus hábitos para completar el círculo.'}
+        </p>
       </section>
 
-      {/* Prioridades */}
-      <section className="bg-surface-container-lowest p-6 rounded-[24px] shadow-[0_4px_20px_-4px_rgba(83,81,162,0.04)] border border-primary/5">
-        <h3 className="text-[11px] font-bold text-outline uppercase tracking-widest mb-4">Prioridades más repetidas</h3>
-        <div className="flex flex-col items-center justify-center py-8 text-center bg-surface-container-low rounded-xl border-2 border-dashed border-outline/10">
-          <p className="text-sm font-bold text-outline">Sin datos aún</p>
-          <p className="text-[10px] text-outline/60 mt-1">Completa tareas para ver tus tendencias</p>
+      {/* Tareas Pendientes Hoy */}
+      <section className="space-y-4">
+        <div className="flex justify-between items-center px-2">
+          <h3 className="text-[11px] font-bold text-outline uppercase tracking-widest">Tareas para hoy</h3>
+          <span className="bg-orange-100 text-orange-600 text-[10px] font-bold px-2 py-0.5 rounded-md">{pendingToday.length} restantes</span>
+        </div>
+        
+        <div className="grid gap-3">
+          {pendingToday.map((task) => (
+            <div key={task.id} className="bg-surface-container-lowest p-4 rounded-2xl border border-primary/5 flex items-center gap-3">
+              <div className="w-2 h-2 rounded-full bg-orange-400 shrink-0" />
+              <span className="font-bold text-sm text-on-surface truncate">{task.text}</span>
+            </div>
+          ))}
+
+          {pendingToday.length === 0 && (
+            <div className="bg-surface-container-lowest rounded-[24px] p-8 flex flex-col items-center justify-center text-center border-2 border-dashed border-outline/10">
+              <div className="w-12 h-12 bg-green-50 rounded-full flex items-center justify-center text-green-500 mb-3">
+                <CheckCircle2 className="w-6 h-6" />
+              </div>
+              <p className="text-sm font-bold text-outline">¡Todo despejado!</p>
+              <p className="text-[10px] text-outline/60 mt-1">No tienes tareas pendientes para hoy.</p>
+            </div>
+          )}
         </div>
       </section>
     </motion.div>
@@ -58,7 +117,6 @@ function HabitsTab({ profile, habits, toggleHabit, weeklyHistory }: { profile: U
 
   // Procesar historial semanal
   const weeklyData = days.map((day, index) => {
-    // Calculamos la fecha para este índice (Lunes de esta semana + index)
     const now = new Date();
     const d = now.getDay();
     const diff = now.getDate() - d + (d === 0 ? -6 : 1) + index;
@@ -104,42 +162,9 @@ function HabitsTab({ profile, habits, toggleHabit, weeklyHistory }: { profile: U
         <p className="text-center text-[10px] font-bold text-outline/50">Progreso según hábitos completados</p>
       </section>
 
-      {/* Resumen Hoy */}
-      <section className="bg-surface-container-lowest rounded-[24px] p-6 shadow-[0_4px_20px_-4px_rgba(83,81,162,0.04)] border border-primary/5">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h3 className="text-lg font-bold text-primary">Hoy</h3>
-            <p className="text-xs font-semibold text-secondary mt-1">
-              {habits.filter(h => h.completed).length > 0 ? '¡Vas por buen camino!' : '¡Empieza tu primer hábito!'}
-            </p>
-          </div>
-          <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
-            <Trophy className="w-6 h-6 text-primary stroke-[2.5]" />
-          </div>
-        </div>
-        
-        <div className="space-y-3">
-          <div className="flex justify-between items-end">
-            <span className="text-3xl font-extrabold text-primary">
-              {habits.length > 0 ? Math.round((habits.filter(h => h.completed).length / habits.length) * 100) : 0}%
-            </span>
-            <span className="text-xs font-semibold text-secondary">{habits.filter(h => h.completed).length}/{habits.length} completados</span>
-          </div>
-          <div className="w-full h-2.5 bg-surface-container-high rounded-full overflow-hidden">
-            <motion.div 
-                initial={{ width: 0 }} 
-                animate={{ width: `${habits.length > 0 ? (habits.filter(h => h.completed).length / habits.length) * 100 : 0}%` }} 
-                transition={{ duration: 1 }} 
-                className="h-full bg-primary rounded-full"
-            />
-          </div>
-        </div>
-      </section>
-
       {/* Habito por Habito */}
       <section className="space-y-4">
-        <h4 className="text-[11px] font-bold text-outline uppercase tracking-widest px-2 pt-2">Progreso Diario</h4>
-        
+        <h4 className="text-[11px] font-bold text-outline uppercase tracking-widest px-2 pt-2">Hoy</h4>
         <div className="grid gap-3">
             {habits.map((habit) => (
                 <motion.button
@@ -160,20 +185,38 @@ function HabitsTab({ profile, habits, toggleHabit, weeklyHistory }: { profile: U
                     <span className={`font-bold text-sm ${habit.completed ? 'text-primary' : 'text-on-surface'}`}>{habit.name}</span>
                 </motion.button>
             ))}
-
-            {habits.length === 0 && (
-                <div className="bg-surface-container-lowest rounded-[24px] p-8 flex flex-col items-center justify-center text-center shadow-[0_4px_20px_-4px_rgba(83,81,162,0.04)] border border-primary/5 border-dashed">
-                    <p className="text-sm font-bold text-outline">No hay hábitos registrados</p>
-                    <p className="text-[10px] text-outline/60 mt-1">Usa la app diariamente para ver tu progreso</p>
-                </div>
-            )}
         </div>
       </section>
     </motion.div>
   )
 }
 
-function NightTab({ profile }: { profile: UserProfile | null, key?: string }) {
+function NightTab({ tasks, sessions }: { tasks: Task[], sessions: any[], key?: string }) {
+  const today = new Date().toISOString().split('T')[0];
+  const completedToday = tasks.filter(t => t.fecha === today && t.completed);
+  const allToday = tasks.filter(t => t.fecha === today);
+  
+  const totalSecondsToday = sessions
+    .filter(s => s.fecha === today)
+    .reduce((acc, curr) => acc + (curr.duracion_segundos || 0), 0);
+  
+  const formatTime = (seconds: number) => {
+    const hrs = Math.floor(seconds / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
+    if (hrs > 0) return `${hrs}h ${mins}m`;
+    return `${mins}m`;
+  };
+
+  const score = allToday.length > 0 ? (completedToday.length / allToday.length) * 100 : 0;
+  
+  const getMotivation = (s: number) => {
+    if (allToday.length === 0) return "¡Agrega tareas para mañana! 💜";
+    if (s === 0) return "Mañana es una nueva oportunidad 💜";
+    if (s <= 50) return "¡Buen comienzo, sigue así!";
+    if (s < 100) return "¡Casi lo logras, eres increíble!";
+    return "¡Día perfecto! 🎉";
+  };
+
   return (
     <motion.div
         initial={{ opacity: 0, y: 10 }}
@@ -181,39 +224,79 @@ function NightTab({ profile }: { profile: UserProfile | null, key?: string }) {
         exit={{ opacity: 0, y: -10 }}
         className="space-y-6"
     >
-      <section className="bg-surface-container-lowest p-6 rounded-[24px] shadow-[0_4px_24px_rgba(83,81,162,0.04)] border border-primary/5">
-        <h2 className="font-bold text-xl text-on-surface mb-6">Horas enfocada esta semana</h2>
-        <div className="flex items-end justify-between h-48 gap-2 mb-4 px-2">
-          {['L', 'M', 'X', 'J', 'V', 'S', 'D'].map((day) => (
-              <div key={day} className="flex flex-col items-center flex-1 gap-3">
-                  <div className="w-full bg-primary/5 rounded-full relative group h-36 overflow-hidden">
-                      <motion.div 
-                          initial={{ height: 0 }}
-                          animate={{ height: '0%' }}
-                          className={`absolute bottom-0 w-full rounded-full bg-primary/80`}
-                      />
-                  </div>
-                  <span className={`text-[11px] font-bold uppercase text-outline`}>{day}</span>
-              </div>
-          ))}
+      <header className="flex items-center gap-3 mb-2">
+        <div className="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center text-indigo-500">
+          <Moon className="w-6 h-6" />
         </div>
-        <p className="text-center text-xs font-bold text-outline/50">Inicia el temporizador para registrar horas</p>
+        <div>
+          <h2 className="text-[22px] font-extrabold text-on-surface tracking-tight">Tu Noche</h2>
+          <p className="text-secondary text-xs font-bold uppercase tracking-widest opacity-60">Resumen y descanso</p>
+        </div>
+      </header>
+
+      {/* Score Card */}
+      <section className="bg-primary p-6 rounded-[28px] text-white shadow-lg shadow-primary/20 relative overflow-hidden">
+        <div className="relative z-10">
+          <h3 className="text-white/70 text-[11px] font-bold uppercase tracking-widest mb-1">Score del día</h3>
+          <div className="flex items-end gap-2 mb-4">
+            <span className="text-5xl font-black tracking-tighter">{Math.round(score)}%</span>
+            <span className="text-white/60 font-bold mb-1.5">{completedToday.length}/{allToday.length} tareas</span>
+          </div>
+          <p className="font-bold text-lg leading-snug">{getMotivation(score)}</p>
+        </div>
+        <Rocket className="absolute -bottom-4 -right-4 w-32 h-32 text-white/10 -rotate-12" />
       </section>
 
-      <section className="bg-surface-container-lowest p-5 rounded-[24px] shadow-[0_4px_24px_rgba(83,81,162,0.04)] flex items-center transition-all bg-primary/[0.02]">
-          <div className="w-12 h-12 rounded-[16px] bg-primary/10 flex items-center justify-center mr-4">
-              <Clock className="w-6 h-6 text-primary" />
+      <div className="grid grid-cols-2 gap-4">
+        <div className="bg-surface-container-lowest p-5 rounded-[24px] border border-primary/5 shadow-sm">
+          <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-500 mb-3">
+            <Clock className="w-5 h-5" />
           </div>
-          <div>
-            <span className="block text-2xl font-extrabold text-primary">0h</span>
-            <span className="text-sm font-medium text-secondary">tiempo total</span>
+          <p className="text-[22px] font-black text-on-surface leading-none mb-1">{formatTime(totalSecondsToday)}</p>
+          <p className="text-[10px] font-bold text-outline tracking-wider uppercase">Tiempo enfocado</p>
+        </div>
+        <div className="bg-surface-container-lowest p-5 rounded-[24px] border border-primary/5 shadow-sm">
+          <div className="w-10 h-10 bg-green-50 rounded-xl flex items-center justify-center text-green-500 mb-3">
+            <CheckCircle2 className="w-5 h-5" />
           </div>
+          <p className="text-[22px] font-black text-on-surface leading-none mb-1">{completedToday.length}</p>
+          <p className="text-[10px] font-bold text-outline tracking-wider uppercase">Completadas</p>
+        </div>
+      </div>
+
+      <section className="space-y-4">
+        <h3 className="text-[11px] font-bold text-outline uppercase tracking-widest px-2">Logros de hoy</h3>
+        <div className="space-y-2">
+          {completedToday.map(t => (
+            <div key={t.id} className="flex items-center gap-3 p-4 bg-green-50/30 rounded-2xl border border-green-100">
+              <div className="bg-green-500 rounded-full p-0.5">
+                <Check className="w-3 h-3 text-white stroke-[4]" />
+              </div>
+              <span className="text-on-surface font-bold text-sm truncate">{t.text}</span>
+            </div>
+          ))}
+          {completedToday.length === 0 && (
+            <div className="text-center py-6 opacity-40">
+              <Coffee className="w-8 h-8 mx-auto mb-2" />
+              <p className="text-xs font-bold">Sin tareas completadas hoy</p>
+            </div>
+          )}
+        </div>
       </section>
     </motion.div>
   )
 }
 
-export function StatsView({ setView, profile, habits, toggleHabit, weeklyHistory }: { key?: string, setView: (v: ViewState) => void, profile: UserProfile | null, habits: { id: string, name: string, completed: boolean }[], toggleHabit: (id: string) => void, weeklyHistory?: any[] }) {
+export function StatsView({ setView, profile, habits, toggleHabit, weeklyHistory, tasks = [], sessions = [] }: { 
+  key?: string, 
+  setView: (v: ViewState) => void, 
+  profile: UserProfile | null, 
+  habits: { id: string, name: string, completed: boolean }[], 
+  toggleHabit: (id: string) => void, 
+  weeklyHistory?: any[],
+  tasks?: Task[],
+  sessions?: any[]
+}) {
   const [activeTab, setActiveTab] = useState<'MORNING' | 'HABITS' | 'NIGHT'>('MORNING');
 
   return (
@@ -247,9 +330,9 @@ export function StatsView({ setView, profile, habits, toggleHabit, weeklyHistory
 
       <main className="pt-40 px-6 max-w-md mx-auto w-full">
         <AnimatePresence mode="wait">
-           {activeTab === 'MORNING' && <MorningTab key="morning" profile={profile} />}
+           {activeTab === 'MORNING' && <MorningTab key="morning" profile={profile} tasks={tasks} sessions={sessions} weeklyHistory={weeklyHistory || []} />}
            {activeTab === 'HABITS' && <HabitsTab key="habits" profile={profile} habits={habits} toggleHabit={toggleHabit} weeklyHistory={weeklyHistory} />}
-           {activeTab === 'NIGHT' && <NightTab key="night" profile={profile} />}
+           {activeTab === 'NIGHT' && <NightTab key="night" tasks={tasks} sessions={sessions} />}
         </AnimatePresence>
       </main>
     </motion.div>

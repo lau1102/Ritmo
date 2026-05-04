@@ -5,4 +5,5 @@ export interface Task {
   text: string;
   completed: boolean;
   usuario_id?: string;
+  fecha?: string;
 }
