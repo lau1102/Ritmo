@@ -49,9 +49,9 @@ function HabitItem({ habit, toggleHabit, onEdit, onDelete }: HabitItemProps) {
            className="relative flex items-center justify-center w-6 h-6"
         >
              {habit.completed ? (
-               <Heart className="w-6 h-6 text-primary fill-primary" />
+               <img src="/iconos/Corazon_2.svg" alt="Habit Icon" className="w-full h-full object-contain" />
              ) : (
-               <Heart className="w-6 h-6 text-primary/40" />
+               <img src="/iconos/Corazon_1.svg" alt="Habit Icon" className="w-full h-full object-contain opacity-40" />
              )}
         </motion.div>
         <span className={`font-bold text-sm whitespace-nowrap transition-colors ${habit.completed ? 'text-primary font-black' : 'text-on-surface'}`}>

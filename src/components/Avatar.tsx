@@ -1,13 +1,4 @@
-import { Heart, Star, Flower2, Moon, Cloud, Sun, User } from 'lucide-react';
-
-const iconMap: Record<string, any> = {
-  heart: Heart,
-  star: Star,
-  flower: Flower2,
-  moon: Moon,
-  cloud: Cloud,
-  sun: Sun,
-};
+import { User } from 'lucide-react';
 
 interface AvatarProps {
   src?: string;
@@ -17,21 +8,22 @@ interface AvatarProps {
 }
 
 export function Avatar({ src, name, className = '', iconClassName = '' }: AvatarProps) {
-  const isIcon = src && iconMap[src.toLowerCase()];
-  
-  if (isIcon) {
-    const Icon = iconMap[src.toLowerCase()];
-    return (
-      <div className={`flex items-center justify-center bg-primary/10 rounded-full ${className}`}>
-        <Icon className={`w-1/2 h-1/2 text-primary ${iconClassName}`} />
-      </div>
-    );
-  }
-
   if (src && (src.startsWith('http') || src.startsWith('/'))) {
     return (
       <div className={`overflow-hidden flex items-center justify-center bg-primary/5 rounded-full ${className}`}>
         <img src={src} alt="Avatar" className="w-full h-full object-contain" />
+      </div>
+    );
+  }
+
+  // Si src es solo un nombre de icono (ej: "heart") lo convertimos a ruta si coincide con los nuestros
+  const icons = ['heart', 'star', 'flower', 'moon', 'cloud', 'sun'];
+  const normalized = src?.toLowerCase();
+  if (normalized && icons.includes(normalized)) {
+    const fileName = normalized.charAt(0).toUpperCase() + normalized.slice(1) + '_1.svg';
+    return (
+      <div className={`overflow-hidden flex items-center justify-center bg-primary/5 rounded-full ${className}`}>
+        <img src={`/iconos/${fileName}`} alt="Avatar" className="w-full h-full object-contain" />
       </div>
     );
   }

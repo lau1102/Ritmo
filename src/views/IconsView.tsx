@@ -13,12 +13,18 @@ interface IconsViewProps {
 
 export function IconsView({ setView, profile, updateProfileAvatar }: IconsViewProps) {
   const icons = [
-    { id: 'heart', component: Heart },
-    { id: 'star', component: Star },
-    { id: 'flower', component: Flower },
-    { id: 'moon', component: Moon },
-    { id: 'cloud', component: Cloud },
-    { id: 'sun', component: Sun },
+    { id: 'corazon_1', path: '/iconos/Corazon_1.svg' },
+    { id: 'corazon_2', path: '/iconos/Corazon_2.svg' },
+    { id: 'estrella_1', path: '/iconos/Estrella_1.svg' },
+    { id: 'estrella_2', path: '/iconos/Estrella_2.svg' },
+    { id: 'flor_1', path: '/iconos/Flor_1.svg' },
+    { id: 'flor_2', path: '/iconos/Flor_2.svg' },
+    { id: 'luna_1', path: '/iconos/Luna_1.svg' },
+    { id: 'luna_2', path: '/iconos/Luna_2.svg' },
+    { id: 'nube_1', path: '/iconos/Nube_1.svg' },
+    { id: 'nube_2', path: '/iconos/Nube_2.svg' },
+    { id: 'sol_1', path: '/iconos/Sol_1.svg' },
+    { id: 'sol_2', path: '/iconos/Sol_2.svg' },
   ];
 
   const handleSelectIcon = async (path: string) => {
@@ -62,15 +68,14 @@ export function IconsView({ setView, profile, updateProfileAvatar }: IconsViewPr
           </header>
           <div className="grid grid-cols-3 gap-3">
             {icons.map((item) => {
-              const isActive = profile?.avatar?.toLowerCase() === item.id.toLowerCase();
-              const IconComp = item.component;
+              const isActive = profile?.avatar === item.path;
               return (
                 <button 
                   key={item.id}
-                  onClick={() => handleSelectIcon(item.id)}
+                  onClick={() => handleSelectIcon(item.path)}
                   className={`aspect-square bg-white rounded-[24px] flex items-center justify-center transition-all active:scale-90 duration-200 border p-4 shadow-sm ${isActive ? 'border-primary ring-2 ring-primary/20 bg-primary/5' : 'border-primary/5 hover:bg-surface-container'}`}
                 >
-                  <IconComp className={`w-10 h-10 ${isActive ? 'text-primary' : 'text-outline opacity-80'}`} />
+                  <img src={item.path} alt={item.id} className={`w-full h-full object-contain ${isActive ? '' : 'opacity-80'}`} />
                 </button>
               )
             })}

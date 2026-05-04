@@ -7,12 +7,12 @@ import { supabase } from '../lib/supabase';
 import { Avatar } from '../components/Avatar';
 
 const AVATARS = [
-  'heart',
-  'star',
-  'flower',
-  'moon',
-  'cloud',
-  'sun'
+  '/iconos/Corazon_1.svg',
+  '/iconos/Estrella_1.svg',
+  '/iconos/Flor_1.svg',
+  '/iconos/Luna_1.svg',
+  '/iconos/Nube_1.svg',
+  '/iconos/Sol_1.svg'
 ];
 
 export function RegisterView({ setView }: { key?: string, setView: (v: ViewState) => void }) {
@@ -99,14 +99,14 @@ export function RegisterView({ setView }: { key?: string, setView: (v: ViewState
           <div className="space-y-4">
             <label className="text-[11px] font-bold text-outline uppercase tracking-widest pl-1">Elige tu avatar</label>
             <div className="flex items-center gap-4 overflow-x-auto pb-2 scrollbar-hide -mx-2 px-2">
-              {AVATARS.map((id, i) => (
-                <div key={i} className="relative flex-shrink-0 cursor-pointer" onClick={() => setSelectedAvatar(id)}>
+              {AVATARS.map((path, i) => (
+                <div key={i} className="relative flex-shrink-0 cursor-pointer" onClick={() => setSelectedAvatar(path)}>
                   <Avatar 
-                    src={id} 
-                    className={`w-16 h-16 border-2 p-1 transition-all flex items-center justify-center ${selectedAvatar === id ? 'border-primary bg-primary/5' : 'border-transparent opacity-60 hover:opacity-100'}`}
+                    src={path} 
+                    className={`w-16 h-16 border-2 p-1 transition-all flex items-center justify-center ${selectedAvatar === path ? 'border-primary bg-primary/5' : 'border-transparent opacity-60 hover:opacity-100'}`}
                     iconClassName="w-10 h-10"
                   />
-                  {selectedAvatar === id && (
+                  {selectedAvatar === path && (
                     <div className="absolute -bottom-1 -right-1 bg-primary text-white rounded-full p-1 border-2 border-white">
                       <Check className="w-3 h-3" strokeWidth={3} />
                     </div>
