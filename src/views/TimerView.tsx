@@ -61,9 +61,7 @@ export function TimerView({ setView, tasks, toggleTask, profile, sessions, addSe
 
   const handleSessionComplete = (duration: number) => {
     setIsActive(false);
-    if (activeTask) {
-      addSession(activeTask.text, duration);
-    }
+    addSession(activeTask?.text || 'Sesión libre', duration);
   };
 
   const toggleTimer = () => {
@@ -80,8 +78,8 @@ export function TimerView({ setView, tasks, toggleTask, profile, sessions, addSe
     if (isActive || timeSeconds > 0) {
       const duration = timerMode === 'POMODORO' ? (pomodoroMins * 60 - timeSeconds) : timeSeconds;
       
-      if (duration > 0 && activeTask) {
-        addSession(activeTask.text, duration);
+      if (duration > 0) {
+        addSession(activeTask?.text || 'Sesión libre', duration);
       }
       
       setIsActive(false);
@@ -262,8 +260,7 @@ export function TimerView({ setView, tasks, toggleTask, profile, sessions, addSe
           <div className="flex gap-4 w-full">
             <button 
                 onClick={toggleTimer}
-                disabled={!activeTaskId}
-                className={`flex-1 ${isActive ? 'bg-orange-500' : 'bg-primary'} text-white py-5 rounded-[24px] font-bold text-lg shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:active:scale-100`}
+                className={`flex-1 ${isActive ? 'bg-orange-500' : 'bg-primary'} text-white py-5 rounded-[24px] font-bold text-lg shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2`}
             >
               {isActive ? (
                    <><Clock className="w-5 h-5" /> Pausar</>
