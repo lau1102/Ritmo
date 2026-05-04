@@ -188,13 +188,13 @@ export default function App() {
   const fetchTasks = async (userId: string) => {
     const { data } = await supabase
       .from('tareas')
-      .select('*')
+      .select('id, usuario_id, nombre, completada, fecha')
       .eq('usuario_id', userId)
-      .order('created_at', { ascending: false });
+      .order('fecha', { ascending: false });
     if (data) {
       setTasks(data.map((t: any) => ({
         id: t.id,
-        text: t.texto,
+        text: t.nombre,
         completed: t.completada,
         usuario_id: t.usuario_id
       })));
@@ -252,21 +252,20 @@ export default function App() {
     setTasks(prev => [newTask, ...prev]);
 
     try {
+      const today = new Date().toISOString().split('T')[0];
       const { data, error } = await supabase
         .from('tareas')
         .insert([
           { 
-            texto: text.trim(), 
+            nombre: text.trim(), 
             completada: false, 
-            usuario_id: user.id 
+            usuario_id: user.id,
+            fecha: today
           }
         ])
         .select();
 
-      if (error) {
-        console.error("Error adding task:", error);
-        return;
-      }
+      if (error) throw error;
 
       if (data && data.length > 0) {
         setTasks(prev => prev.map(t => t.id === tempId ? {
@@ -275,7 +274,9 @@ export default function App() {
         } : t));
       }
     } catch (err) {
-      console.error("Unexpected error adding task:", err);
+      console.error("Error adding task:", err);
+      // Rollback on error
+      setTasks(prev => prev.filter(t => t.id !== tempId));
     }
   };
 
