@@ -48,10 +48,10 @@ export function RegisterView({ setView }: { key?: string, setView: (v: ViewState
               email: email, 
               avatar: selectedAvatar,
               nivel: 1,
-              xp: 0,
-              racha: 0,
-              tareas_completadas: 0,
-              habitos_completados: 0
+              experiencia: 0,
+              streak: 0,
+              monedas: 0,
+              last_check_in: new Date().toISOString()
             }
           ]);
 

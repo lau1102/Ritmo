@@ -165,7 +165,7 @@ export function HomeView({
         <div className="flex items-center gap-2">
             <div className="bg-primary/10 px-2 py-1 rounded-lg flex items-center gap-1.5">
                 <Medal className="w-4 h-4 text-primary" />
-                <span className="text-primary font-bold text-xs">{profile?.xp || 0} XP</span>
+                <span className="text-primary font-bold text-xs">{profile?.experiencia || 0} XP</span>
             </div>
         </div>
       </header>
@@ -186,7 +186,7 @@ export function HomeView({
               className="w-40 h-40 object-contain drop-shadow-lg" 
             />
             <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-surface-container-lowest font-bold text-primary px-4 py-1.5 rounded-full shadow-md text-xs border border-primary/5 whitespace-nowrap">
-                Nivel {profile?.nivel || 1} — {profile && profile.xp >= (profile.nivel * 50) * 0.8 ? 'Casi por subir' : 'Constante'}
+                Nivel {profile?.nivel || 1} — {profile && profile.experiencia >= (profile.nivel * 50) * 0.8 ? 'Casi por subir' : 'Constante'}
             </div>
           </div>
         </section>
@@ -282,12 +282,12 @@ export function HomeView({
         <section className="bg-surface-container-lowest rounded-3xl p-5 shadow-[0_4px_20px_-4px_rgba(83,81,162,0.04)]">
           <div className="flex justify-between items-end mb-3">
             <span className="font-bold text-[11px] text-primary/60 uppercase tracking-widest">PROGRESO NIVEL {profile?.nivel || 1}</span>
-            <span className="font-bold text-xs text-primary/60">{profile?.xp || 0} / {(profile?.nivel || 1) * 50} XP</span>
+            <span className="font-bold text-xs text-primary/60">{profile?.experiencia || 0} / {(profile?.nivel || 1) * 50} XP</span>
           </div>
           <div className="h-3 w-full bg-surface-container-high rounded-full overflow-hidden">
             <motion.div 
               initial={{ width: 0 }}
-              animate={{ width: `${Math.min(((profile?.xp || 0) / ((profile?.nivel || 1) * 50)) * 100, 100)}%` }}
+              animate={{ width: `${Math.min(((profile?.experiencia || 0) / ((profile?.nivel || 1) * 50)) * 100, 100)}%` }}
               transition={{ duration: 1, ease: "easeOut" }}
               className="h-full bg-primary rounded-full"
             />

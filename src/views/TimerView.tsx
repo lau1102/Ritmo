@@ -238,15 +238,15 @@ export function TimerView({ setView, tasks, toggleTask, profile }: TimerViewProp
           <div className="bg-surface-container-lowest p-5 rounded-[24px] shadow-[0_4px_20px_-4px_rgba(83,81,162,0.04)] flex flex-col justify-between h-32 bg-gradient-to-br from-white to-indigo-50/50 border border-primary/5">
             <TrendingUp className="w-6 h-6 text-primary" />
             <div>
-              <p className="text-secondary text-sm font-medium">Productividad</p>
-              <p className="text-xl font-bold text-on-surface">{(profile?.tareas_completadas || 0) > 0 ? '+12%' : '0%'}</p>
+              <p className="text-secondary text-sm font-medium">Tareas</p>
+              <p className="text-xl font-bold text-on-surface">{tasks.filter(t => t.completed).length}</p>
             </div>
           </div>
           <div className="bg-surface-container-lowest p-5 rounded-[24px] shadow-[0_4px_20px_-4px_rgba(83,81,162,0.04)] flex flex-col justify-between h-32 bg-gradient-to-br from-white to-orange-50/50 border border-orange-500/5">
             <Flame className="w-6 h-6 text-orange-500 fill-orange-500/20" />
             <div>
               <p className="text-secondary text-sm font-medium">Racha</p>
-              <p className="text-xl font-bold text-on-surface">{profile?.racha || 0} {profile?.racha === 1 ? 'día' : 'días'}</p>
+              <p className="text-xl font-bold text-on-surface">{profile?.streak || 0} {profile?.streak === 1 ? 'día' : 'días'}</p>
             </div>
           </div>
         </section>

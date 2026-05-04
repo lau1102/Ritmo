@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'motion/react';
-import { Settings, CheckCircle2, Timer, Flame, Medal, Lock, Edit2, Check, X } from 'lucide-react';
+import { Settings, CheckCircle2, Timer, Flame, Medal, Lock, Edit2, Check, X, Coins } from 'lucide-react';
 import { ViewState } from '../types';
 import { mascotas } from '../data/mascots';
 import { UserProfile } from '../App';
@@ -105,12 +105,12 @@ export function ProfileView({ setView, selectedMascotId, profile, updateProfileN
               <span className="font-bold text-[11px] text-primary uppercase tracking-widest">Progreso Actual</span>
               <h3 className="font-bold text-xl mt-1 text-on-surface">Nivel {profile?.nivel || 1} - Constante</h3>
             </div>
-            <p className="font-bold text-xs text-primary">{profile?.xp || 0} / {(profile?.nivel || 1) * 50} XP</p>
+            <p className="font-bold text-xs text-primary">{profile?.experiencia || 0} / {(profile?.nivel || 1) * 50} XP</p>
           </div>
           <div className="w-full bg-surface-container-high rounded-full h-3 overflow-hidden">
             <motion.div 
               initial={{ width: 0 }} 
-              animate={{ width: `${Math.min(((profile?.xp || 0) / ((profile?.nivel || 1) * 50)) * 100, 100)}%` }} 
+              animate={{ width: `${Math.min(((profile?.experiencia || 0) / ((profile?.nivel || 1) * 50)) * 100, 100)}%` }} 
               transition={{ duration: 1 }} 
               className="bg-primary h-3 rounded-full"
             />
@@ -119,9 +119,9 @@ export function ProfileView({ setView, selectedMascotId, profile, updateProfileN
 
         <div className="grid grid-cols-2 gap-4">
           {[
-            { icon: CheckCircle2, val: profile?.tareas_completadas || 0, label: 'tareas totales' },
-            { icon: Flame, val: profile?.racha || 0, label: 'racha actual' },
-            { icon: Medal, val: profile?.habitos_completados || 0, label: 'hábitos' },
+            { icon: Coins, val: profile?.monedas || 0, label: 'monedas' },
+            { icon: Flame, val: profile?.streak || 0, label: 'racha actual' },
+            { icon: CheckCircle2, val: profile?.nivel || 1, label: 'nivel' },
             { icon: Timer, val: '0h', label: 'tiempo total' },
           ].map((stat, i) => {
             const Icon = stat.icon;

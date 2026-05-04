@@ -7,6 +7,7 @@ import { useState, useEffect } from 'react';
 import { AnimatePresence } from 'motion/react';
 import { ViewState, Task } from './types';
 import { supabase } from './lib/supabase';
+import * as ICONOS from './assets/iconos';
 
 import { SplashView } from './views/SplashView';
 import { MascotView } from './views/MascotView';
@@ -26,10 +27,10 @@ export interface UserProfile {
   avatar: string;
   email: string;
   nivel: number;
-  xp: number;
-  racha: number;
-  tareas_completadas: number;
-  habitos_completados: number;
+  experiencia: number;
+  streak: number;
+  monedas: number;
+  last_check_in: string | null;
 }
 
 export default function App() {
@@ -105,7 +106,7 @@ export default function App() {
   const fetchProfile = async (userId: string) => {
     const { data, error } = await supabase
       .from('usuarios')
-      .select('*')
+      .select('id, email, nombre, avatar, streak, monedas, nivel, experiencia, last_check_in')
       .eq('id', userId)
       .single();
     
@@ -120,13 +121,13 @@ export default function App() {
           nombre: user?.email?.split('@')[0] || 'Usuario', 
           email: user?.email,
           nivel: 1,
-          xp: 0,
-          racha: 0,
-          tareas_completadas: 0,
-          habitos_completados: 0,
-          avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuCUnS9FEY6U0wZOcIdh5XRMuR_OwCWsfCUyVHFja2-JhtFROwjEoRDqVI7MFMdUo47xHlSwrhKIDol4dqOFq_SZqn7aIe7MmvhX8NXShP3HU-BRlSFoTENF4vSn7-D0F9pI7ONSlePFVU-9QsXe6J2P0jC74yEpjq9aPDmI0p3nV4x0iWM1QamrUNr01EkrDqN3nYGiJBfgJ2UWvzhlCNNuajZVZs9L4UIALMnJTRyPATEAutJQf0a-64wqlsPODKG36_aZpo_Vgw"
+          experiencia: 0,
+          streak: 0,
+          monedas: 0,
+          last_check_in: new Date().toISOString(),
+          avatar: ICONOS.CORAZON_1
         }])
-        .select()
+        .select('id, email, nombre, avatar, streak, monedas, nivel, experiencia, last_check_in')
         .single();
       
       if (newData) setProfile(newData);
@@ -139,17 +140,10 @@ export default function App() {
 
     setProfile(current => {
       // Si no hay perfil, usamos valores por defecto
-      const baseProfile = current || { nivel: 1, xp: 0, tareas_completadas: 0 };
+      const baseProfile = current || { nivel: 1, experiencia: 0 };
       
-      let newXP = (baseProfile.xp || 0) + amount;
+      let newXP = (baseProfile.experiencia || 0) + amount;
       let newLevel = baseProfile.nivel || 1;
-      let tareasCompletadas = baseProfile.tareas_completadas || 0;
-
-      if (amount > 0) {
-        tareasCompletadas += 1;
-      } else {
-        tareasCompletadas = Math.max(0, tareasCompletadas - 1);
-      }
       
       // Lógica de Subida de Nivel
       let xpRequired = newLevel * 50;
@@ -171,22 +165,20 @@ export default function App() {
       const updated = { 
         ...current, 
         id: user.id,
-        xp: newXP, 
+        experiencia: newXP, 
         nivel: newLevel,
-        tareas_completadas: tareasCompletadas
       } as UserProfile;
 
       // Sincronizar con Supabase
       supabase
         .from('usuarios')
         .update({ 
-          xp: updated.xp, 
+          experiencia: updated.experiencia, 
           nivel: updated.nivel,
-          tareas_completadas: updated.tareas_completadas
         })
         .eq('id', user.id)
         .then(({ error }) => {
-          if (error) console.error("Error syncing XP/Level:", error);
+          if (error) console.error("Error syncing experiencia/Level:", error);
         });
 
       return updated;
@@ -365,14 +357,10 @@ export default function App() {
     const previousHabits = [...habits];
     const previousProfile = { ...profile };
 
-    // 1. Actualización optimista de hábitos y contador
+    // 1. Actualización optimista de hábitos
     setHabits(prev => prev.map(h =>
       h.id === id ? { ...h, completed: newStatus } : h
     ));
-
-    const currentCompleted = habits.filter(h => h.completed).length;
-    const newCount = newStatus ? currentCompleted + 1 : Math.max(0, currentCompleted - 1);
-    setProfile(p => p ? { ...p, habitos_completados: newCount } : null);
 
     try {
       const { error } = await supabase
@@ -382,14 +370,6 @@ export default function App() {
         .eq('usuario_id', user.id);
 
       if (error) throw error;
-
-      // 3. Sincronizar contador global en la tabla de usuarios
-      const { error: userError } = await supabase
-        .from('usuarios')
-        .update({ habitos_completados: newCount })
-        .eq('id', user.id);
-
-      if (userError) throw userError;
 
       // 4. Actualizar gráfica semanal
       fetchWeeklyHabitsHistory(user.id);
