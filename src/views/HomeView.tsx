@@ -5,6 +5,7 @@ import { ViewState, Task } from '../types';
 import { mascotas } from '../data/mascots';
 import { UserProfile } from '../App';
 import { Avatar } from '../components/Avatar';
+import { CORAZON_1, CORAZON_2 } from '../assets/iconos';
 
 interface HomeViewProps {
   key?: string;
@@ -49,9 +50,9 @@ function HabitItem({ habit, toggleHabit, onEdit, onDelete }: HabitItemProps) {
            className="relative flex items-center justify-center w-6 h-6"
         >
              {habit.completed ? (
-               <img src="/iconos/Corazon_2.svg" alt="Habit Icon" className="w-full h-full object-contain" />
+               <img src={CORAZON_2} alt="Habit Icon" className="w-full h-full object-contain" />
              ) : (
-               <img src="/iconos/Corazon_1.svg" alt="Habit Icon" className="w-full h-full object-contain opacity-40" />
+               <img src={CORAZON_1} alt="Habit Icon" className="w-full h-full object-contain opacity-40" />
              )}
         </motion.div>
         <span className={`font-bold text-sm whitespace-nowrap transition-colors ${habit.completed ? 'text-primary font-black' : 'text-on-surface'}`}>

@@ -3,16 +3,17 @@ import { motion } from 'motion/react';
 import { ArrowLeft, Check, Camera, Smile, Palette, EyeOff, ArrowRight, Loader2 } from 'lucide-react';
 import { ViewState } from '../types';
 import { supabase } from '../lib/supabase';
+import * as ICONOS from '../assets/iconos';
 
 import { Avatar } from '../components/Avatar';
 
 const AVATARS = [
-  '/iconos/Corazon_1.svg',
-  '/iconos/Estrella_1.svg',
-  '/iconos/Flor_1.svg',
-  '/iconos/Luna_1.svg',
-  '/iconos/Nube_1.svg',
-  '/iconos/Sol_1.svg'
+  ICONOS.CORAZON_1,
+  ICONOS.ESTRELLA_1,
+  ICONOS.FLOR_1,
+  ICONOS.LUNA_1,
+  ICONOS.NUBE_1,
+  ICONOS.SOL_1
 ];
 
 export function RegisterView({ setView }: { key?: string, setView: (v: ViewState) => void }) {

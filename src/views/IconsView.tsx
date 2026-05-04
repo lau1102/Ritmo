@@ -3,6 +3,7 @@ import { ArrowLeft, Heart, Star, Flower2 as Flower, Moon, Cloud, Sun } from 'luc
 import { ViewState } from '../types';
 import { UserProfile } from '../App';
 import { Avatar } from '../components/Avatar';
+import * as ICONOS from '../assets/iconos';
 
 interface IconsViewProps {
   key?: string;
@@ -13,18 +14,18 @@ interface IconsViewProps {
 
 export function IconsView({ setView, profile, updateProfileAvatar }: IconsViewProps) {
   const icons = [
-    { id: 'corazon_1', path: '/iconos/Corazon_1.svg' },
-    { id: 'corazon_2', path: '/iconos/Corazon_2.svg' },
-    { id: 'estrella_1', path: '/iconos/Estrella_1.svg' },
-    { id: 'estrella_2', path: '/iconos/Estrella_2.svg' },
-    { id: 'flor_1', path: '/iconos/Flor_1.svg' },
-    { id: 'flor_2', path: '/iconos/Flor_2.svg' },
-    { id: 'luna_1', path: '/iconos/Luna_1.svg' },
-    { id: 'luna_2', path: '/iconos/Luna_2.svg' },
-    { id: 'nube_1', path: '/iconos/Nube_1.svg' },
-    { id: 'nube_2', path: '/iconos/Nube_2.svg' },
-    { id: 'sol_1', path: '/iconos/Sol_1.svg' },
-    { id: 'sol_2', path: '/iconos/Sol_2.svg' },
+    { id: 'corazon_1', path: ICONOS.CORAZON_1 },
+    { id: 'corazon_2', path: ICONOS.CORAZON_2 },
+    { id: 'estrella_1', path: ICONOS.ESTRELLA_1 },
+    { id: 'estrella_2', path: ICONOS.ESTRELLA_2 },
+    { id: 'flor_1', path: ICONOS.FLOR_1 },
+    { id: 'flor_2', path: ICONOS.FLOR_2 },
+    { id: 'luna_1', path: ICONOS.LUNA_1 },
+    { id: 'luna_2', path: ICONOS.LUNA_2 },
+    { id: 'nube_1', path: ICONOS.NUBE_1 },
+    { id: 'nube_2', path: ICONOS.NUBE_2 },
+    { id: 'sol_1', path: ICONOS.SOL_1 },
+    { id: 'sol_2', path: ICONOS.SOL_2 },
   ];
 
   const handleSelectIcon = async (path: string) => {
