@@ -4,6 +4,7 @@ import { Medal, Plus, CheckCircle2, Circle, Trash2, Heart } from 'lucide-react';
 import { ViewState, Task } from '../types';
 import { mascotas } from '../data/mascots';
 import { UserProfile } from '../App';
+import { Avatar } from '../components/Avatar';
 
 interface HomeViewProps {
   key?: string;
@@ -47,11 +48,11 @@ function HabitItem({ habit, toggleHabit, onEdit, onDelete }: HabitItemProps) {
            transition={{ duration: 0.5, ease: "easeInOut" }}
            className="relative flex items-center justify-center w-6 h-6"
         >
-             <img 
-               src={habit.completed ? "/iconos/Corazon_2.svg" : "/iconos/Corazon_1.svg"} 
-               alt="Habit Icon" 
-               className={`w-full h-full object-contain ${habit.completed ? '' : 'opacity-40'}`} 
-             />
+             {habit.completed ? (
+               <Heart className="w-6 h-6 text-primary fill-primary" />
+             ) : (
+               <Heart className="w-6 h-6 text-primary/40" />
+             )}
         </motion.div>
         <span className={`font-bold text-sm whitespace-nowrap transition-colors ${habit.completed ? 'text-primary font-black' : 'text-on-surface'}`}>
           {habit.name}
@@ -148,14 +149,12 @@ export function HomeView({
     >
       <header className="sticky top-0 w-full z-40 flex items-center justify-between px-6 py-4 bg-surface/80 backdrop-blur-md border-b border-primary/5">
         <div className="flex items-center gap-3">
-          <button onClick={() => setView('PROFILE')} className="w-10 h-10 rounded-full overflow-hidden border-2 border-primary/20 active:scale-95 transition-transform flex items-center justify-center bg-primary/5">
-            {profile?.avatar ? (
-              <img src={profile.avatar} alt="Avatar" className="w-full h-full object-contain" />
-            ) : (
-              <span className="text-primary font-bold text-xs">
-                {profile?.nombre?.split(' ').map(n => n[0]).join('') || 'U'}
-              </span>
-            )}
+          <button onClick={() => setView('PROFILE')} className="group flex items-center justify-center active:scale-95 transition-transform">
+            <Avatar 
+              src={profile?.avatar} 
+              name={profile?.nombre}
+              className="w-10 h-10 border-2 border-primary/20 group-hover:border-primary/40 transition-colors"
+            />
           </button>
           <div className="flex flex-col">
             <span className="font-bold text-sm text-on-surface leading-tight">{profile?.nombre || 'Mi Ritmo'}</span>

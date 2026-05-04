@@ -4,13 +4,15 @@ import { ArrowLeft, Check, Camera, Smile, Palette, EyeOff, ArrowRight, Loader2 }
 import { ViewState } from '../types';
 import { supabase } from '../lib/supabase';
 
+import { Avatar } from '../components/Avatar';
+
 const AVATARS = [
-  '/iconos/Corazon_1.svg',
-  '/iconos/Estrella_1.svg',
-  '/iconos/Flor_1.svg',
-  '/iconos/Luna_1.svg',
-  '/iconos/Nube_1.svg',
-  '/iconos/Sol_1.svg'
+  'heart',
+  'star',
+  'flower',
+  'moon',
+  'cloud',
+  'sun'
 ];
 
 export function RegisterView({ setView }: { key?: string, setView: (v: ViewState) => void }) {
@@ -97,12 +99,14 @@ export function RegisterView({ setView }: { key?: string, setView: (v: ViewState
           <div className="space-y-4">
             <label className="text-[11px] font-bold text-outline uppercase tracking-widest pl-1">Elige tu avatar</label>
             <div className="flex items-center gap-4 overflow-x-auto pb-2 scrollbar-hide -mx-2 px-2">
-              {AVATARS.map((url, i) => (
-                <div key={i} className="relative flex-shrink-0 cursor-pointer" onClick={() => setSelectedAvatar(url)}>
-                  <div className={`w-16 h-16 rounded-full border-2 p-1 transition-all flex items-center justify-center ${selectedAvatar === url ? 'border-primary bg-primary/5' : 'border-transparent opacity-60 hover:opacity-100'}`}>
-                    <img src={url} alt={`Avatar${i}`} className="w-12 h-12 object-contain" />
-                  </div>
-                  {selectedAvatar === url && (
+              {AVATARS.map((id, i) => (
+                <div key={i} className="relative flex-shrink-0 cursor-pointer" onClick={() => setSelectedAvatar(id)}>
+                  <Avatar 
+                    src={id} 
+                    className={`w-16 h-16 border-2 p-1 transition-all flex items-center justify-center ${selectedAvatar === id ? 'border-primary bg-primary/5' : 'border-transparent opacity-60 hover:opacity-100'}`}
+                    iconClassName="w-10 h-10"
+                  />
+                  {selectedAvatar === id && (
                     <div className="absolute -bottom-1 -right-1 bg-primary text-white rounded-full p-1 border-2 border-white">
                       <Check className="w-3 h-3" strokeWidth={3} />
                     </div>

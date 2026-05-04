@@ -4,6 +4,7 @@ import { Menu, BadgeCheck, Pencil, Sunrise, Moon, LogOut, Check, X, Trash2, Plus
 import { ViewState } from '../types';
 
 import { UserProfile } from '../App';
+import { Avatar } from '../components/Avatar';
 
 interface SettingsViewProps {
   key?: string;
@@ -87,15 +88,11 @@ export function SettingsView({ setView, profile, updateProfileName }: SettingsVi
           </button>
           <h1 className="font-bold text-xl text-primary">Ritmo</h1>
         </div>
-        <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-primary/20 bg-primary/10 flex items-center justify-center">
-            {profile?.avatar ? (
-              <img src={profile.avatar} alt="Avatar" className="w-full h-full object-contain" />
-            ) : (
-                <span className="text-primary font-bold text-xs">
-                    {profile?.nombre?.split(' ').map(n => n[0]).join('') || profile?.email?.[0]?.toUpperCase() || 'U'}
-                </span>
-            )}
-        </div>
+        <Avatar 
+          src={profile?.avatar} 
+          name={profile?.nombre}
+          className="w-10 h-10 border-2 border-primary/20"
+        />
       </header>
 
       <main className="flex-1 px-6 max-w-md mx-auto w-full">
@@ -110,13 +107,11 @@ export function SettingsView({ setView, profile, updateProfileName }: SettingsVi
             
             <button onClick={() => setView('ICONS')} className="w-full bg-white p-4 rounded-[24px] shadow-[0_4px_20px_rgba(0,0,0,0.02)] flex items-center justify-between hover:bg-surface-container/50 active:scale-[0.98] transition-all group border border-primary/5">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full overflow-hidden bg-primary/10 flex items-center justify-center text-primary">
-                  {profile?.avatar?.startsWith('/iconos/') ? (
-                    <img src={profile.avatar} className="w-8 h-8" />
-                  ) : (
-                    <BadgeCheck className="w-6 h-6" />
-                  )}
-                </div>
+                <Avatar 
+                  src={profile?.avatar} 
+                  className="w-12 h-12"
+                  iconClassName="w-6 h-6"
+                />
                 <div className="text-left">
                   <p className="font-bold text-base text-on-surface">Icono de perfil</p>
                   <p className="text-sm font-medium text-secondary">Cambia tu avatar</p>

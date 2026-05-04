@@ -4,6 +4,7 @@ import { Settings, CheckCircle2, Timer, Flame, Medal, Lock, Edit2, Check, X } fr
 import { ViewState } from '../types';
 import { mascotas } from '../data/mascots';
 import { UserProfile } from '../App';
+import { Avatar } from '../components/Avatar';
 
 interface ProfileViewProps {
   key?: string;
@@ -42,15 +43,11 @@ export function ProfileView({ setView, selectedMascotId, profile, updateProfileN
           <Settings className="w-6 h-6 text-primary" />
         </button>
         <h1 className="font-bold text-xl tracking-tight text-primary">Mi Perfil</h1>
-        <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-primary/20 bg-primary/10 flex items-center justify-center">
-          {profile?.avatar ? (
-            <img src={profile.avatar} alt="Avatar" className="w-full h-full object-contain" />
-          ) : (
-            <span className="text-primary font-bold text-xs">
-                 {profile?.nombre?.split(' ').map(n => n[0]).join('') || profile?.email?.[0]?.toUpperCase() || 'U'}
-            </span>
-          )}
-        </div>
+        <Avatar 
+          src={profile?.avatar} 
+          name={profile?.nombre}
+          className="w-10 h-10 border-2 border-primary/20"
+        />
       </header>
 
       <main className="px-6 space-y-8 pt-6 max-w-md mx-auto w-full">

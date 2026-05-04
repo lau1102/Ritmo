@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Play, Square, TrendingUp, Flame, Lock, Target, ChevronRight, CheckCircle2, Clock } from 'lucide-react';
 import { ViewState, Task } from '../types';
 import { UserProfile } from '../App';
+import { Avatar } from '../components/Avatar';
 
 interface TimerViewProps {
   key?: string;
@@ -110,14 +111,12 @@ export function TimerView({ setView, tasks, toggleTask, profile }: TimerViewProp
     >
       <header className="fixed top-0 w-full z-40 flex items-center justify-between px-6 py-4 bg-surface/80 backdrop-blur-md border-b border-primary/5">
          <div className="flex items-center gap-3">
-          <button onClick={() => setView('PROFILE')} className="w-10 h-10 rounded-full overflow-hidden border-2 border-primary/20 active:scale-95 transition-transform flex items-center justify-center bg-primary/5">
-             {profile?.avatar ? (
-               <img src={profile.avatar} alt="Avatar" className="w-full h-full object-contain" />
-             ) : (
-               <span className="text-primary font-bold text-xs">
-                 {profile?.nombre?.split(' ').map(n => n[0]).join('') || 'U'}
-               </span>
-             )}
+          <button onClick={() => setView('PROFILE')} className="group flex items-center justify-center active:scale-95 transition-transform">
+            <Avatar 
+              src={profile?.avatar} 
+              name={profile?.nombre}
+              className="w-10 h-10 border-2 border-primary/20 group-hover:border-primary/40 transition-colors"
+            />
           </button>
           <div className="flex flex-col">
             <span className="font-bold text-sm text-on-surface leading-tight">{profile?.nombre || 'Mi Ritmo'}</span>

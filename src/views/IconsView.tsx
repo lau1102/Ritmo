@@ -1,7 +1,8 @@
 import { motion } from 'motion/react';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Heart, Star, Flower2 as Flower, Moon, Cloud, Sun } from 'lucide-react';
 import { ViewState } from '../types';
 import { UserProfile } from '../App';
+import { Avatar } from '../components/Avatar';
 
 interface IconsViewProps {
   key?: string;
@@ -12,18 +13,12 @@ interface IconsViewProps {
 
 export function IconsView({ setView, profile, updateProfileAvatar }: IconsViewProps) {
   const icons = [
-    { id: 'corazon_1', path: '/iconos/Corazon_1.svg' },
-    { id: 'corazon_2', path: '/iconos/Corazon_2.svg' },
-    { id: 'estrella_1', path: '/iconos/Estrella_1.svg' },
-    { id: 'estrella_2', path: '/iconos/Estrella_2.svg' },
-    { id: 'flor_1', path: '/iconos/Flor_1.svg' },
-    { id: 'flor_2', path: '/iconos/Flor_2.svg' },
-    { id: 'luna_1', path: '/iconos/Luna_1.svg' },
-    { id: 'luna_2', path: '/iconos/Luna_2.svg' },
-    { id: 'nube_1', path: '/iconos/Nube_1.svg' },
-    { id: 'nube_2', path: '/iconos/Nube_2.svg' },
-    { id: 'sol_1', path: '/iconos/Sol_1.svg' },
-    { id: 'sol_2', path: '/iconos/Sol_2.svg' },
+    { id: 'heart', component: Heart },
+    { id: 'star', component: Star },
+    { id: 'flower', component: Flower },
+    { id: 'moon', component: Moon },
+    { id: 'cloud', component: Cloud },
+    { id: 'sun', component: Sun },
   ];
 
   const handleSelectIcon = async (path: string) => {
@@ -50,15 +45,12 @@ export function IconsView({ setView, profile, updateProfileAvatar }: IconsViewPr
       <main className="w-full max-w-md px-6 pt-24 pb-32 flex flex-col items-center">
         <section className="w-full flex flex-col items-center mb-10">
           <div className="relative group">
-            <div className="w-36 h-36 rounded-full bg-surface-container-low flex items-center justify-center shadow-sm relative z-10 border-4 border-white overflow-hidden">
-              <div className="w-28 h-28 flex items-center justify-center">
-                {profile?.avatar ? (
-                  <img src={profile.avatar} alt="Avatar Preview" className="w-full h-full object-contain" />
-                ) : (
-                  <div className="w-20 h-20 bg-primary/10 rounded-full" />
-                )}
-              </div>
-            </div>
+            <Avatar 
+              src={profile?.avatar} 
+              name={profile?.nombre}
+              className="w-36 h-36 border-4 border-white shadow-sm z-10"
+              iconClassName="w-16 h-16"
+            />
             <div className="absolute -inset-4 bg-primary/10 rounded-full blur-2xl -z-0"></div>
           </div>
           <p className="mt-6 font-bold text-[11px] text-outline uppercase tracking-widest">Vista previa</p>
@@ -70,14 +62,15 @@ export function IconsView({ setView, profile, updateProfileAvatar }: IconsViewPr
           </header>
           <div className="grid grid-cols-3 gap-3">
             {icons.map((item) => {
-              const isActive = profile?.avatar === item.path;
+              const isActive = profile?.avatar?.toLowerCase() === item.id.toLowerCase();
+              const IconComp = item.component;
               return (
                 <button 
                   key={item.id}
-                  onClick={() => handleSelectIcon(item.path)}
+                  onClick={() => handleSelectIcon(item.id)}
                   className={`aspect-square bg-white rounded-[24px] flex items-center justify-center transition-all active:scale-90 duration-200 border p-4 shadow-sm ${isActive ? 'border-primary ring-2 ring-primary/20 bg-primary/5' : 'border-primary/5 hover:bg-surface-container'}`}
                 >
-                  <img src={item.path} alt={item.id} className={`w-full h-full object-contain ${isActive ? '' : 'opacity-80'}`} />
+                  <IconComp className={`w-10 h-10 ${isActive ? 'text-primary' : 'text-outline opacity-80'}`} />
                 </button>
               )
             })}
