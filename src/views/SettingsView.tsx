@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { motion } from 'motion/react';
-import { Menu, BadgeCheck, Pencil, Sunrise, Moon, LogOut, Check, X } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
+import { Menu, BadgeCheck, Pencil, Sunrise, Moon, LogOut, Check, X, Trash2, Plus, Bell } from 'lucide-react';
 import { ViewState } from '../types';
 
 import { UserProfile } from '../App';
@@ -15,6 +15,14 @@ interface SettingsViewProps {
 export function SettingsView({ setView, profile, updateProfileName }: SettingsViewProps) {
   const [isEditingName, setIsEditingName] = useState(false);
   const [tempName, setTempName] = useState(profile?.nombre || '');
+  const [reminders, setReminders] = useState([
+    { id: '1', label: 'Mañana', time: '07:00', active: true, type: 'morning' },
+    { id: '2', label: 'Noche', time: '21:00', active: true, type: 'night' }
+  ]);
+  const [isAddingReminder, setIsAddingReminder] = useState(false);
+  const [editingReminderId, setEditingReminderId] = useState<string | null>(null);
+  const [newReminderTime, setNewReminderTime] = useState('08:00');
+  const [newReminderLabel, setNewReminderLabel] = useState('');
 
   const handleSaveName = async () => {
     if (tempName.trim()) {
@@ -26,6 +34,43 @@ export function SettingsView({ setView, profile, updateProfileName }: SettingsVi
   const handleCancelName = () => {
     setTempName(profile?.nombre || '');
     setIsEditingName(false);
+  };
+
+  const handleAddReminder = () => {
+    if (!newReminderTime) return;
+    const newRem = {
+      id: Math.random().toString(36).substring(7),
+      label: newReminderLabel || 'Recordatorio',
+      time: newReminderTime,
+      active: true,
+      type: 'custom'
+    };
+    setReminders([...reminders, newRem]);
+    setIsAddingReminder(false);
+    setNewReminderLabel('');
+  };
+
+  const deleteReminder = (id: string) => {
+    setReminders(reminders.filter(r => r.id !== id));
+  };
+
+  const toggleReminder = (id: string) => {
+    setReminders(reminders.map(r => r.id === id ? { ...r, active: !r.active } : r));
+  };
+
+  const startEditingReminder = (id: string) => {
+    const r = reminders.find(rem => rem.id === id);
+    if (r) {
+      setEditingReminderId(id);
+      setNewReminderTime(r.time);
+      setNewReminderLabel(r.label);
+    }
+  };
+
+  const saveEditedReminder = () => {
+    setReminders(reminders.map(r => r.id === editingReminderId ? { ...r, time: newReminderTime, label: newReminderLabel || r.label } : r));
+    setEditingReminderId(null);
+    setNewReminderLabel('');
   };
 
   return (
@@ -40,10 +85,16 @@ export function SettingsView({ setView, profile, updateProfileName }: SettingsVi
           <button onClick={() => setView('PROFILE')} className="hover:bg-surface-container transition-colors p-2 -ml-2 rounded-full active:scale-95">
             <Menu className="w-6 h-6 text-primary" />
           </button>
-          <h1 className="font-bold text-xl text-primary">Productivity</h1>
+          <h1 className="font-bold text-xl text-primary">Ritmo</h1>
         </div>
-        <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-primary/20">
-            <img src={profile?.avatar || "https://lh3.googleusercontent.com/aida-public/AB6AXuCUnS9FEY6U0wZOcIdh5XRMuR_OwCWsfCUyVHFja2-JhtFROwjEoRDqVI7MFMdUo47xHlSwrhKIDol4dqOFq_SZqn7aIe7MmvhX8NXShP3HU-BRlSFoTENF4vSn7-D0F9pI7ONSlePFVU-9QsXe6J2P0jC74yEpjq9aPDmI0p3nV4x0iWM1QamrUNr01EkrDqN3nYGiJBfgJ2UWvzhlCNNuajZVZs9L4UIALMnJTRyPATEAutJQf0a-64wqlsPODKG36_aZpo_Vgw"} alt="Profile" className="w-full h-full object-cover" />
+        <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-primary/20 bg-primary/10 flex items-center justify-center">
+            {profile?.avatar ? (
+              <img src={profile.avatar} alt="Avatar" className="w-full h-full object-contain" />
+            ) : (
+                <span className="text-primary font-bold text-xs">
+                    {profile?.nombre?.split(' ').map(n => n[0]).join('') || profile?.email?.[0]?.toUpperCase() || 'U'}
+                </span>
+            )}
         </div>
       </header>
 
@@ -118,43 +169,83 @@ export function SettingsView({ setView, profile, updateProfileName }: SettingsVi
 
         <div className="mb-8 pl-1">
           <div className="flex justify-between items-end pr-1">
-            <span className="font-bold text-[11px] text-outline uppercase tracking-widest">NOTIFICACIONES</span>
-            <span className="text-sm text-primary font-extrabold cursor-pointer hover:underline">Añadir +</span>
+            <span className="font-bold text-[11px] text-outline uppercase tracking-widest">RECORDATORIOS</span>
+            <button onClick={() => setIsAddingReminder(true)} className="text-sm text-primary font-extrabold cursor-pointer hover:underline">Añadir +</button>
           </div>
           <div className="mt-4 space-y-3">
+            <AnimatePresence>
+              {isAddingReminder && (
+                <motion.div 
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="bg-primary/5 p-4 rounded-[24px] border border-primary/20 space-y-3 overflow-hidden"
+                >
+                  <div className="flex gap-2">
+                    <input 
+                      type="text" 
+                      placeholder="Nombre (ej: Meditar)" 
+                      value={newReminderLabel}
+                      onChange={(e) => setNewReminderLabel(e.target.value)}
+                      className="flex-1 bg-white p-2 rounded-xl text-sm border border-primary/10 outline-none"
+                    />
+                    <input 
+                      type="time" 
+                      value={newReminderTime}
+                      onChange={(e) => setNewReminderTime(e.target.value)}
+                      className="bg-white p-2 rounded-xl text-sm border border-primary/10 outline-none"
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <button onClick={handleAddReminder} className="flex-1 bg-primary text-white py-2 rounded-xl font-bold text-sm">Guardar</button>
+                    <button onClick={() => setIsAddingReminder(false)} className="flex-1 bg-surface-container py-2 rounded-xl font-bold text-sm">Cancelar</button>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
             
-            <div className="bg-white p-5 rounded-[24px] shadow-[0_4px_20px_rgba(0,0,0,0.02)] flex items-center justify-between border-l-[6px] border-l-primary border border-primary/5">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-primary/10 rounded-[16px] text-primary">
-                  <Sunrise className="w-6 h-6 fill-primary/20" />
+            {reminders.map((reminder) => (
+              <div key={reminder.id} className={`bg-white p-5 rounded-[24px] shadow-[0_4px_20px_rgba(0,0,0,0.02)] flex items-center justify-between border border-primary/5 transition-all ${editingReminderId === reminder.id ? 'ring-2 ring-primary bg-primary/[0.02]' : ''}`}>
+                <div className="flex items-center gap-4">
+                  <div className={`p-3 rounded-[16px] ${reminder.active ? 'bg-primary/10 text-primary' : 'bg-surface-container text-outline-variant'}`}>
+                    {reminder.type === 'morning' ? <Sunrise className="w-6 h-6" /> : reminder.type === 'night' ? <Moon className="w-6 h-6" /> : <Bell className="w-6 h-6" />}
+                  </div>
+                  <div>
+                    {editingReminderId === reminder.id ? (
+                      <div className="space-y-1">
+                        <input type="text" value={newReminderLabel} onChange={(e) => setNewReminderLabel(e.target.value)} className="bg-surface-container p-1 rounded text-xs font-bold w-24 outline-none border border-primary/10" />
+                        <input type="time" value={newReminderTime} onChange={(e) => setNewReminderTime(e.target.value)} className="block bg-surface-container p-1 rounded text-base font-extrabold text-primary w-24 outline-none border border-primary/10" />
+                      </div>
+                    ) : (
+                      <>
+                        <p className={`font-bold text-base ${reminder.active ? 'text-on-surface' : 'text-outline'}`}>{reminder.label}</p>
+                        <p className={`text-xl font-extrabold -tracking-tight ${reminder.active ? 'text-primary' : 'text-outline-variant'}`}>{reminder.time}</p>
+                      </>
+                    )}
+                  </div>
                 </div>
-                <div>
-                  <p className="font-bold text-base text-on-surface">Mañana</p>
-                  <p className="text-xl text-primary font-extrabold -tracking-tight">7:00 am</p>
+                <div className="flex items-center gap-2">
+                  {editingReminderId === reminder.id ? (
+                    <button onClick={saveEditedReminder} className="p-2 text-primary hover:bg-primary/10 rounded-lg">
+                      <Check className="w-5 h-5" />
+                    </button>
+                  ) : (
+                    <>
+                      <button onClick={() => startEditingReminder(reminder.id)} className="p-2 text-outline-variant hover:text-primary transition-colors">
+                        <Pencil className="w-4 h-4" />
+                      </button>
+                      <button onClick={() => deleteReminder(reminder.id)} className="p-2 text-outline-variant hover:text-error transition-colors">
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                      <label className="relative inline-flex items-center cursor-pointer ml-1">
+                        <input type="checkbox" checked={reminder.active} onChange={() => toggleReminder(reminder.id)} className="sr-only peer" />
+                        <div className="w-12 h-7 bg-surface-container peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                      </label>
+                    </>
+                  )}
                 </div>
               </div>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" defaultChecked className="sr-only peer" />
-                <div className="w-14 h-8 bg-surface-container peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-primary"></div>
-              </label>
-            </div>
-
-            <div className="bg-white p-5 rounded-[24px] shadow-[0_4px_20px_rgba(0,0,0,0.02)] flex items-center justify-between border-l-[6px] border-l-secondary border border-primary/5">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-secondary-container rounded-[16px] text-secondary">
-                  <Moon className="w-6 h-6 fill-secondary/20" />
-                </div>
-                <div>
-                  <p className="font-bold text-base text-on-surface">Noche</p>
-                  <p className="text-xl text-secondary font-extrabold -tracking-tight">9:00 pm</p>
-                </div>
-              </div>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" defaultChecked className="sr-only peer" />
-                <div className="w-14 h-8 bg-surface-container peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-primary"></div>
-              </label>
-            </div>
-
+            ))}
           </div>
         </div>
 

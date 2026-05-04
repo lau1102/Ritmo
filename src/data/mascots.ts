@@ -27,5 +27,12 @@ export const mascotas: Mascot[] = [
     image: '/Elementos/Nube.svg',
     tags: ['Relajada', 'Soñadora'],
     description: 'Nube es relajada y soñadora. Le encanta flotar sin prisa, imaginar historias y acompañar en silencio. Es ese tipo de personaje que escucha mucho y transmite calma, como un respiro profundo en medio del caos.'
+  },
+  {
+    id: 'estrella',
+    name: 'Estrella',
+    image: '/iconos/Estrella_1.svg',
+    tags: ['Brillante', 'Guía'],
+    description: 'Estrella es una guía brillante que te ayuda a iluminar tus objetivos. Siempre está ahí para mostrarte el camino cuando te sientes perdido.'
   }
 ];

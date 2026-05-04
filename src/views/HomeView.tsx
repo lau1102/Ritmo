@@ -15,13 +15,110 @@ interface HomeViewProps {
   deleteTask: (id: string) => void;
   habits: { id: string, name: string, completed: boolean }[];
   toggleHabit: (id: string) => void;
+  addHabit: (name: string) => void;
+  updateHabit: (id: string, name: string) => void;
+  deleteHabit: (id: string) => void;
   profile: UserProfile | null;
 }
 
-export function HomeView({ setView, selectedMascotId, tasks, addTask, toggleTask, deleteTask, habits, toggleHabit, profile }: HomeViewProps) {
+interface HabitItemProps {
+  key?: string;
+  habit: { id: string, name: string, completed: boolean };
+  toggleHabit: (id: string) => void;
+  onEdit: () => void;
+  onDelete: () => void;
+}
+
+function HabitItem({ habit, toggleHabit, onEdit, onDelete }: HabitItemProps) {
+  return (
+    <div className="flex-shrink-0 flex flex-col gap-2 group">
+      <motion.button
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.95 }}
+        onClick={() => toggleHabit(habit.id)}
+        className={`flex items-center gap-3 px-6 py-4 rounded-[28px] border-2 transition-all shadow-sm ${
+          habit.completed 
+          ? 'bg-primary/10 border-primary/40 shadow-primary/5' 
+          : 'bg-white text-on-surface border-primary/5 hover:border-primary/20'
+        }`}
+      >
+        <motion.div
+           animate={habit.completed ? { scale: [1, 1.4, 0.9, 1.1, 1] } : { scale: 1 }}
+           transition={{ duration: 0.5, ease: "easeInOut" }}
+           className="relative flex items-center justify-center w-6 h-6"
+        >
+             <img 
+               src={habit.completed ? "/iconos/Corazon_2.svg" : "/iconos/Corazon_1.svg"} 
+               alt="Habit Icon" 
+               className={`w-full h-full object-contain ${habit.completed ? '' : 'opacity-40'}`} 
+             />
+        </motion.div>
+        <span className={`font-bold text-sm whitespace-nowrap transition-colors ${habit.completed ? 'text-primary font-black' : 'text-on-surface'}`}>
+          {habit.name}
+        </span>
+      </motion.button>
+      
+      <div className="flex justify-center gap-2 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <button 
+            onClick={(e) => {
+              e.stopPropagation();
+              onEdit();
+            }}
+            className="p-1 px-3 rounded-full bg-primary/5 text-[10px] font-bold text-primary hover:bg-primary/10 transition-colors"
+          >
+            Editar
+          </button>
+          <button 
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete();
+            }}
+            className="p-1 px-3 rounded-full bg-error/5 text-[10px] font-bold text-error hover:bg-error/10 transition-colors"
+          >
+            Borrar
+          </button>
+      </div>
+    </div>
+  );
+}
+
+export function HomeView({ 
+  setView, 
+  selectedMascotId, 
+  tasks, 
+  addTask, 
+  toggleTask, 
+  deleteTask, 
+  habits, 
+  toggleHabit,
+  addHabit,
+  updateHabit,
+  deleteHabit,
+  profile 
+}: HomeViewProps) {
   const currentMascot = mascotas.find(m => m.id === selectedMascotId) || mascotas[0];
   const [newTaskText, setNewTaskText] = useState('');
+  const [isAddingHabit, setIsAddingHabit] = useState(false);
+  const [newHabitName, setNewHabitName] = useState('');
+  const [editingHabitId, setEditingHabitId] = useState<string | null>(null);
+  const [editName, setEditName] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const handleAddHabit = () => {
+    if (newHabitName.trim()) {
+      addHabit(newHabitName.trim());
+      setNewHabitName('');
+      setIsAddingHabit(false);
+    }
+  };
+
+  const handleUpdateHabit = () => {
+    if (editingHabitId && editName.trim()) {
+      updateHabit(editingHabitId, editName.trim());
+      setEditingHabitId(null);
+      setEditName('');
+    }
+  };
 
   const handleAddTask = () => {
     if (newTaskText.trim()) {
@@ -51,12 +148,26 @@ export function HomeView({ setView, selectedMascotId, tasks, addTask, toggleTask
     >
       <header className="sticky top-0 w-full z-40 flex items-center justify-between px-6 py-4 bg-surface/80 backdrop-blur-md border-b border-primary/5">
         <div className="flex items-center gap-3">
-          <button onClick={() => setView('PROFILE')} className="w-10 h-10 rounded-full overflow-hidden border-2 border-primary/20 active:scale-95 transition-transform">
-            <img src={profile?.avatar || "https://lh3.googleusercontent.com/aida-public/AB6AXuCUnS9FEY6U0wZOcIdh5XRMuR_OwCWsfCUyVHFja2-JhtFROwjEoRDqVI7MFMdUo47xHlSwrhKIDol4dqOFq_SZqn7aIe7MmvhX8NXShP3HU-BRlSFoTENF4vSn7-D0F9pI7ONSlePFVU-9QsXe6J2P0jC74yEpjq9aPDmI0p3nV4x0iWM1QamrUNr01EkrDqN3nYGiJBfgJ2UWvzhlCNNuajZVZs9L4UIALMnJTRyPATEAutJQf0a-64wqlsPODKG36_aZpo_Vgw"} alt="Avatar" className="w-full h-full object-cover" />
+          <button onClick={() => setView('PROFILE')} className="w-10 h-10 rounded-full overflow-hidden border-2 border-primary/20 active:scale-95 transition-transform flex items-center justify-center bg-primary/5">
+            {profile?.avatar ? (
+              <img src={profile.avatar} alt="Avatar" className="w-full h-full object-contain" />
+            ) : (
+              <span className="text-primary font-bold text-xs">
+                {profile?.nombre?.split(' ').map(n => n[0]).join('') || 'U'}
+              </span>
+            )}
           </button>
-          <span className="font-semibold text-lg text-primary">Nivel {profile?.nivel || 1}</span>
+          <div className="flex flex-col">
+            <span className="font-bold text-sm text-on-surface leading-tight">{profile?.nombre || 'Mi Ritmo'}</span>
+            <span className="font-medium text-[10px] text-outline uppercase tracking-tighter">Nivel {profile?.nivel || 1}</span>
+          </div>
         </div>
-        <Medal className="w-6 h-6 text-primary" />
+        <div className="flex items-center gap-2">
+            <div className="bg-primary/10 px-2 py-1 rounded-lg flex items-center gap-1.5">
+                <Medal className="w-4 h-4 text-primary" />
+                <span className="text-primary font-bold text-xs">{profile?.xp || 0} XP</span>
+            </div>
+        </div>
       </header>
 
       <div className="px-6 pt-6 space-y-8 flex-1">
@@ -84,27 +195,89 @@ export function HomeView({ setView, selectedMascotId, tasks, addTask, toggleTask
         <section className="space-y-4">
           <div className="flex items-center justify-between px-1">
             <h3 className="text-xs font-bold text-outline uppercase tracking-widest">Hábitos Diarios</h3>
-            <span className="text-[10px] bg-secondary/10 text-secondary px-2 py-0.5 rounded-full font-bold">
-              {habits.filter(h => h.completed).length}/{habits.length}
-            </span>
+            <div className="flex items-center gap-2">
+                 <span className="text-[10px] bg-primary/10 text-primary px-3 py-1 rounded-full font-bold">
+                   {habits.filter(h => h.completed).length} / {habits.length || 3} completados
+                 </span>
+            </div>
           </div>
-          <div className="flex gap-3 overflow-x-auto pb-2 -mx-2 px-2 scrollbar-hide">
-            {habits.map((habit) => (
-              <button
-                key={habit.id}
-                onClick={() => toggleHabit(habit.id)}
-                className={`flex-shrink-0 flex items-center gap-2 px-4 py-3 rounded-2xl border-2 transition-all active:scale-95 ${
-                  habit.completed 
-                  ? 'bg-secondary text-white border-secondary shadow-lg shadow-secondary/20' 
-                  : 'bg-surface-container-lowest text-on-surface border-transparent shadow-sm'
-                }`}
-              >
-                <Heart className={`w-4 h-4 ${habit.completed ? 'fill-white' : ''}`} />
-                <span className="font-bold text-sm whitespace-nowrap">{habit.name}</span>
-              </button>
-            ))}
+          <div className="flex gap-3 overflow-x-auto pb-2 -mx-2 px-2 scrollbar-hide items-start">
+            <AnimatePresence mode="popLayout">
+              {habits.map((habit) => (
+                <HabitItem 
+                  key={habit.id} 
+                  habit={habit} 
+                  toggleHabit={toggleHabit} 
+                  onEdit={() => {
+                    setEditingHabitId(habit.id);
+                    setEditName(habit.name);
+                  }}
+                  onDelete={() => deleteHabit(habit.id)}
+                />
+              ))}
+            </AnimatePresence>
+            
+            {!isAddingHabit ? (
+                <button 
+                  onClick={() => setIsAddingHabit(true)}
+                  className="flex-shrink-0 w-14 h-[60px] rounded-[28px] border-2 border-dashed border-primary/20 flex items-center justify-center text-primary/40 hover:text-primary hover:border-primary/40 transition-colors bg-surface/50"
+                >
+                  <Plus className="w-6 h-6" />
+                </button>
+            ) : (
+                <motion.div 
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className="flex-shrink-0 bg-white p-3 rounded-[28px] border-2 border-primary/20 shadow-sm flex flex-col gap-2 w-48"
+                >
+                    <input 
+                      autoFocus
+                      type="text" 
+                      value={newHabitName}
+                      onChange={(e) => setNewHabitName(e.target.value)}
+                      placeholder="Nombre..."
+                      className="bg-surface-container p-2.5 rounded-2xl text-xs font-bold outline-none border border-primary/5 focus:border-primary/20"
+                    />
+                    <div className="flex gap-2">
+                        <button onClick={handleAddHabit} className="flex-1 bg-primary text-white py-2 rounded-xl text-xs font-bold active:scale-95 transition-transform">Guardar</button>
+                        <button onClick={() => setIsAddingHabit(false)} className="flex-1 bg-surface-container py-2 rounded-xl text-xs font-bold active:scale-95 transition-transform">Cancel</button>
+                    </div>
+                </motion.div>
+            )}
           </div>
         </section>
+
+        <AnimatePresence>
+          {editingHabitId && (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-surface/80 backdrop-blur-sm"
+              onClick={() => setEditingHabitId(null)}
+            >
+              <motion.div 
+                initial={{ scale: 0.9, y: 20 }}
+                animate={{ scale: 1, y: 0 }}
+                className="w-full max-w-xs bg-white p-6 rounded-[32px] shadow-xl border border-primary/5"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <h4 className="font-bold text-lg text-on-surface mb-4">Editar Hábito</h4>
+                <input 
+                  autoFocus
+                  type="text" 
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  className="w-full bg-surface-container p-4 rounded-2xl font-bold text-on-surface outline-none border border-primary/5 mb-4"
+                />
+                <div className="flex gap-3">
+                  <button onClick={handleUpdateHabit} className="flex-1 bg-primary text-white py-3 rounded-2xl font-bold">Guardar</button>
+                  <button onClick={() => setEditingHabitId(null)} className="flex-1 bg-surface-container py-3 rounded-2xl font-bold">Cancelar</button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         <section className="bg-surface-container-lowest rounded-3xl p-5 shadow-[0_4px_20px_-4px_rgba(83,81,162,0.04)]">
           <div className="flex justify-between items-end mb-3">

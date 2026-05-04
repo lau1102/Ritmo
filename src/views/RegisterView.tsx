@@ -5,8 +5,12 @@ import { ViewState } from '../types';
 import { supabase } from '../lib/supabase';
 
 const AVATARS = [
-  "https://lh3.googleusercontent.com/aida-public/AB6AXuDQ52sI98uG5h2Wq3iJdI-2-T8v2Yg-k9-K2QvP3x6RIfG-_C7z26lA3L9a7oE4Lq9J8H3bHk-x9-E_3d2sH3eH_cWpU5k1iIe3z2o_0o3tG-m5V3Qv0Dk8W8E-h-jY3M-j3YvH8z2S7c4x9Gj7m1G38o2E_E3kRQGk5B6L2hL2J6e1Z8gK3kI3G",
-  "https://lh3.googleusercontent.com/aida-public/AB6AXuBK-lCyOhdEO17Ff1f9jgMmEXbXYv9KAmX1mZx0prrr2wpI2un58mxQQnhc9FxEuToN3Lv7yAyMt6BLnMjFJOk-sh18n1TSUhMUuuPoxZ0CRaT24X3N3v0KttuSMHhH6RHvThf4i7-qz4qUUfa5D4HVGrCdSF05VSr--6L4Q2unR6rx8P0DLMPjpR5-47uEPo0gGEEM43prtVmCgkyta70PxCLPocQvyB-zyOCDpyA9inKZxv3rmsaIhBDtIFo0SnBO1r74pec3ew"
+  '/iconos/Corazon_1.svg',
+  '/iconos/Estrella_1.svg',
+  '/iconos/Flor_1.svg',
+  '/iconos/Luna_1.svg',
+  '/iconos/Nube_1.svg',
+  '/iconos/Sol_1.svg'
 ];
 
 export function RegisterView({ setView }: { key?: string, setView: (v: ViewState) => void }) {
@@ -95,8 +99,8 @@ export function RegisterView({ setView }: { key?: string, setView: (v: ViewState
             <div className="flex items-center gap-4 overflow-x-auto pb-2 scrollbar-hide -mx-2 px-2">
               {AVATARS.map((url, i) => (
                 <div key={i} className="relative flex-shrink-0 cursor-pointer" onClick={() => setSelectedAvatar(url)}>
-                  <div className={`w-16 h-16 rounded-full border-2 p-0.5 transition-all ${selectedAvatar === url ? 'border-primary' : 'border-transparent opacity-50'}`}>
-                    <img src={url} alt={`Avatar${i}`} className="w-full h-full rounded-full object-cover bg-gray-200" />
+                  <div className={`w-16 h-16 rounded-full border-2 p-1 transition-all flex items-center justify-center ${selectedAvatar === url ? 'border-primary bg-primary/5' : 'border-transparent opacity-60 hover:opacity-100'}`}>
+                    <img src={url} alt={`Avatar${i}`} className="w-12 h-12 object-contain" />
                   </div>
                   {selectedAvatar === url && (
                     <div className="absolute -bottom-1 -right-1 bg-primary text-white rounded-full p-1 border-2 border-white">

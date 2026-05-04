@@ -42,8 +42,14 @@ export function ProfileView({ setView, selectedMascotId, profile, updateProfileN
           <Settings className="w-6 h-6 text-primary" />
         </button>
         <h1 className="font-bold text-xl tracking-tight text-primary">Mi Perfil</h1>
-        <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-primary/20">
-          <img src={profile?.avatar || "https://lh3.googleusercontent.com/aida-public/AB6AXuCUnS9FEY6U0wZOcIdh5XRMuR_OwCWsfCUyVHFja2-JhtFROwjEoRDqVI7MFMdUo47xHlSwrhKIDol4dqOFq_SZqn7aIe7MmvhX8NXShP3HU-BRlSFoTENF4vSn7-D0F9pI7ONSlePFVU-9QsXe6J2P0jC74yEpjq9aPDmI0p3nV4x0iWM1QamrUNr01EkrDqN3nYGiJBfgJ2UWvzhlCNNuajZVZs9L4UIALMnJTRyPATEAutJQf0a-64wqlsPODKG36_aZpo_Vgw"} alt="Avatar min" className="w-full h-full object-cover" />
+        <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-primary/20 bg-primary/10 flex items-center justify-center">
+          {profile?.avatar ? (
+            <img src={profile.avatar} alt="Avatar" className="w-full h-full object-contain" />
+          ) : (
+            <span className="text-primary font-bold text-xs">
+                 {profile?.nombre?.split(' ').map(n => n[0]).join('') || profile?.email?.[0]?.toUpperCase() || 'U'}
+            </span>
+          )}
         </div>
       </header>
 

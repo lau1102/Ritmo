@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Play, RotateCcw, TrendingUp, Flame, Lock, Target, ChevronRight, CheckCircle2 } from 'lucide-react';
+import { Play, Square, TrendingUp, Flame, Lock, Target, ChevronRight, CheckCircle2, Clock } from 'lucide-react';
 import { ViewState, Task } from '../types';
 import { UserProfile } from '../App';
 
@@ -17,6 +17,10 @@ export function TimerView({ setView, tasks, toggleTask, profile }: TimerViewProp
   const [isActive, setIsActive] = useState(false);
   const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
   const [showTaskSelector, setShowTaskSelector] = useState(false);
+  const [sessions, setSessions] = useState<{taskId: string, minutes: number, completed: boolean, timestamp: string}[]>([]);
+  
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const startTimeRef = useRef<number>(0);
 
   const activeTask = tasks.find(t => t.id === activeTaskId);
   const pendingTasks = tasks.filter(t => !t.completed);
@@ -28,29 +32,67 @@ export function TimerView({ setView, tasks, toggleTask, profile }: TimerViewProp
     }
   }, [pendingTasks, activeTaskId]);
 
-  // Mock timer logic
+  // Timer logic
   useEffect(() => {
-    let interval: NodeJS.Timeout;
     if (isActive && timeLeft > 0) {
-      interval = setInterval(() => {
-        setTimeLeft((prevTime) => prevTime - 1);
+      timerRef.current = setInterval(() => {
+        setTimeLeft((prev) => {
+          if (prev <= 1) {
+            handleSessionComplete();
+            return 0;
+          }
+          return prev - 1;
+        });
       }, 1000);
-    } else if (timeLeft === 0) {
-      setIsActive(false);
+    } else {
+      if (timerRef.current) clearInterval(timerRef.current);
     }
-    return () => clearInterval(interval);
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
   }, [isActive, timeLeft]);
+
+  const handleSessionComplete = () => {
+    setIsActive(false);
+    if (activeTaskId) {
+      setSessions(prev => [{
+        taskId: activeTaskId,
+        minutes: 25,
+        completed: true,
+        timestamp: new Date().toISOString()
+      }, ...prev]);
+    }
+  };
 
   const toggleTimer = () => {
     if (!isActive && timeLeft === 0) {
       setTimeLeft(25 * 60); // 25 mins
+      startTimeRef.current = 25 * 60;
     }
     setIsActive(!isActive);
   };
 
-  const resetTimer = () => {
-    setIsActive(false);
-    setTimeLeft(0);
+  const stopTimer = () => {
+    if (isActive || timeLeft > 0) {
+      const elapsedSeconds = (startTimeRef.current || 25 * 60) - timeLeft;
+      const elapsedMinutes = Math.floor(elapsedSeconds / 60);
+      
+      if (elapsedMinutes > 0 && activeTaskId) {
+        setSessions(prev => [{
+          taskId: activeTaskId,
+          minutes: elapsedMinutes,
+          completed: false, // Partial session
+          timestamp: new Date().toISOString()
+        }, ...prev]);
+      }
+      
+      setIsActive(false);
+      setTimeLeft(0);
+    }
+  };
+
+  const getCompletedSessionsForTask = (taskId: string) => {
+    return sessions.filter(s => s.taskId === taskId && s.completed).length;
   };
 
   const formatTime = (seconds: number) => {
@@ -68,10 +110,19 @@ export function TimerView({ setView, tasks, toggleTask, profile }: TimerViewProp
     >
       <header className="fixed top-0 w-full z-40 flex items-center justify-between px-6 py-4 bg-surface/80 backdrop-blur-md border-b border-primary/5">
          <div className="flex items-center gap-3">
-          <button onClick={() => setView('PROFILE')} className="w-10 h-10 rounded-full overflow-hidden border-2 border-primary/20 active:scale-95 transition-transform">
-             <img src={profile?.avatar || "https://lh3.googleusercontent.com/aida-public/AB6AXuBvp1ffCwW-nzy23N6M-C-3RZDONszscXG_F9SEdU7O1SDM7ypyMpZoJIUtmG2fL6vewmgZ-Lhgw0FIvwXLutoarNtHyzq4Vyob7t36bcsNmpQotZuF6-OXvxTLum5IZBefFuvydXpFAXLARXgF6G71a0y_jAZUWcDjyrGyRglBb9thJhRpHgil_MGjAfI07-Mlif-TwyCQ4B_pgEtpga1AlQls54qAgnNsbKv8bhwFgS7uo5bu88V1FcUFwNm8RbDnss7kyMuuDg"} alt="Avatar" className="w-full h-full object-cover" />
+          <button onClick={() => setView('PROFILE')} className="w-10 h-10 rounded-full overflow-hidden border-2 border-primary/20 active:scale-95 transition-transform flex items-center justify-center bg-primary/5">
+             {profile?.avatar ? (
+               <img src={profile.avatar} alt="Avatar" className="w-full h-full object-contain" />
+             ) : (
+               <span className="text-primary font-bold text-xs">
+                 {profile?.nombre?.split(' ').map(n => n[0]).join('') || 'U'}
+               </span>
+             )}
           </button>
-          <span className="font-extrabold text-lg text-primary tracking-tight">TaskFlow</span>
+          <div className="flex flex-col">
+            <span className="font-bold text-sm text-on-surface leading-tight">{profile?.nombre || 'Mi Ritmo'}</span>
+            <span className="font-medium text-[10px] text-outline uppercase tracking-tighter">Temporizador</span>
+          </div>
         </div>
         <div className="bg-primary/10 px-3 py-1 rounded-full">
             <span className="text-primary font-semibold text-sm">Lvl {profile?.nivel || 1}</span>
@@ -104,10 +155,17 @@ export function TimerView({ setView, tasks, toggleTask, profile }: TimerViewProp
                   <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary">
                     <Target className="w-5 h-5" />
                   </div>
-                  <div className="flex-1 overflow-hidden">
-                    <h3 className="font-bold text-on-surface truncate">
-                      {activeTask?.text || (pendingTasks.length > 0 ? "Selecciona una tarea" : "Sin tareas pendientes")}
-                    </h3>
+                   <div className="flex-1 overflow-hidden">
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-bold text-on-surface truncate">
+                        {activeTask?.text || (pendingTasks.length > 0 ? "Selecciona una tarea" : "Sin tareas pendientes")}
+                      </h3>
+                      {activeTaskId && (
+                        <span className="flex-shrink-0 bg-primary/10 text-primary text-[10px] px-1.5 py-0.5 rounded-md font-bold">
+                          {getCompletedSessionsForTask(activeTaskId)} ✓
+                        </span>
+                      )}
+                    </div>
                     <p className="text-secondary text-xs font-medium">Bloque actual</p>
                   </div>
                 </motion.div>
@@ -159,21 +217,20 @@ export function TimerView({ setView, tasks, toggleTask, profile }: TimerViewProp
           <div className="flex gap-4 w-full">
             <button 
                 onClick={toggleTimer}
-                className="flex-1 bg-primary text-white py-5 rounded-[24px] font-bold text-lg shadow-lg shadow-primary/20 active:scale-95 transition-all flex items-center justify-center gap-2"
+                className={`flex-1 ${isActive ? 'bg-orange-500' : 'bg-primary'} text-white py-5 rounded-[24px] font-bold text-lg shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2`}
             >
               {isActive ? (
-                   // Adding a pause icon could be here, reusing play for simplicity mapping to design
-                   <><Play className="w-5 h-5 fill-white" /> Pausar</>
+                   <><Clock className="w-5 h-5" /> Pausar</>
               ) : (
                   <><Play className="w-5 h-5 fill-white" /> Iniciar</>
               )}
             </button>
             <button 
-                onClick={resetTimer}
-                className="flex-1 bg-surface-container-lowest border border-primary/10 text-primary py-5 rounded-[24px] font-bold text-lg active:scale-95 transition-all flex items-center justify-center gap-2"
+                onClick={stopTimer}
+                className="flex-1 bg-surface-container-lowest border border-error/10 text-error py-5 rounded-[24px] font-bold text-lg active:scale-95 transition-all flex items-center justify-center gap-2"
             >
-              <RotateCcw className="w-5 h-5" />
-              Reiniciar
+              <Square className="w-5 h-5 fill-error/20" />
+              Parar
             </button>
           </div>
         </section>
@@ -183,14 +240,14 @@ export function TimerView({ setView, tasks, toggleTask, profile }: TimerViewProp
             <TrendingUp className="w-6 h-6 text-primary" />
             <div>
               <p className="text-secondary text-sm font-medium">Productividad</p>
-              <p className="text-xl font-bold text-on-surface">+12%</p>
+              <p className="text-xl font-bold text-on-surface">{(profile?.tareas_completadas || 0) > 0 ? '+12%' : '0%'}</p>
             </div>
           </div>
           <div className="bg-surface-container-lowest p-5 rounded-[24px] shadow-[0_4px_20px_-4px_rgba(83,81,162,0.04)] flex flex-col justify-between h-32 bg-gradient-to-br from-white to-orange-50/50 border border-orange-500/5">
             <Flame className="w-6 h-6 text-orange-500 fill-orange-500/20" />
             <div>
               <p className="text-secondary text-sm font-medium">Racha</p>
-              <p className="text-xl font-bold text-on-surface">5 días</p>
+              <p className="text-xl font-bold text-on-surface">{profile?.racha || 0} {profile?.racha === 1 ? 'día' : 'días'}</p>
             </div>
           </div>
         </section>
@@ -198,26 +255,35 @@ export function TimerView({ setView, tasks, toggleTask, profile }: TimerViewProp
         <section className="space-y-4">
           <div className="flex justify-between items-center px-1">
             <h2 className="font-bold text-xs text-secondary tracking-widest uppercase">Actividad Reciente</h2>
-            <button className="text-primary text-sm font-bold" onClick={() => setView('STATS')}>Estadísticas</button>
+            <button className="text-outline text-xs font-bold" onClick={() => setSessions([])}>Limpiar</button>
           </div>
           <div className="space-y-3">
-            {tasks.filter(t => t.completed).slice(0, 3).map((task) => (
-              <div key={task.id} className="bg-surface-container-lowest rounded-[20px] flex items-stretch overflow-hidden group hover:scale-[1.01] transition-transform shadow-[0_4px_12px_rgba(83,81,162,0.03)] border flex-1 justify-between border-primary/5">
-                <div className="w-2 bg-primary"></div>
-                <div className="p-4 flex flex-1 justify-between items-center bg-gradient-to-r from-primary/5 to-transparent">
-                    <div className="flex flex-1 overflow-hidden">
-                        <CheckCircle2 className="w-5 h-5 text-primary shrink-0 mr-3 mt-0.5" />
-                        <div className="overflow-hidden">
-                          <h3 className="font-bold text-on-surface text-base truncate">{task.text}</h3>
-                          <p className="text-secondary text-xs font-medium opacity-70">Tarea completada</p>
+            {sessions.map((session, idx) => {
+               const task = tasks.find(t => t.id === session.taskId);
+               return (
+                <div key={idx} className="bg-surface-container-lowest rounded-[20px] flex items-stretch overflow-hidden group hover:scale-[1.01] transition-transform shadow-[0_4px_12px_rgba(83,81,162,0.03)] border flex-1 justify-between border-primary/5">
+                    <div className={`w-2 ${session.completed ? 'bg-green-500' : 'bg-orange-400'}`}></div>
+                    <div className="p-4 flex flex-1 justify-between items-center">
+                        <div className="flex flex-1 overflow-hidden">
+                            {session.completed ? (
+                                <CheckCircle2 className="w-5 h-5 text-green-500 shrink-0 mr-3 mt-0.5" />
+                            ) : (
+                                <Clock className="w-5 h-5 text-orange-400 shrink-0 mr-3 mt-0.5" />
+                            )}
+                            <div className="overflow-hidden">
+                                <h3 className="font-bold text-on-surface text-base truncate">{task?.text || 'Tarea desconocida'}</h3>
+                                <p className="text-secondary text-xs font-medium opacity-70">
+                                    {session.completed ? 'Sesión completa (25 min)' : `Sesión parcial (${session.minutes} min)`}
+                                </p>
+                            </div>
                         </div>
                     </div>
                 </div>
-              </div>
-            ))}
-            {tasks.filter(t => t.completed).length === 0 && (
+               );
+            })}
+            {sessions.length === 0 && (
               <div className="bg-surface-container-lowest rounded-[24px] p-8 text-center border-2 border-dashed border-primary/10">
-                <p className="text-secondary text-sm font-medium">No has completado tareas hoy.<br/>¡Enfócate y logra tus metas!</p>
+                <p className="text-secondary text-sm font-medium">No hay actividad reciente.<br/>¡Enfócate y logra tus metas!</p>
               </div>
             )}
           </div>

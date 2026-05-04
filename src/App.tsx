@@ -43,6 +43,7 @@ export default function App() {
     { id: '2', name: 'Beber Agua', completed: false },
     { id: '3', name: 'Leer', completed: false }
   ]);
+  const [weeklyHabitsHistory, setWeeklyHabitsHistory] = useState<any[]>([]);
 
   // Auth Listener
   useEffect(() => {
@@ -52,7 +53,8 @@ export default function App() {
         fetchProfile(session.user.id);
         fetchTasks(session.user.id);
         fetchHabits(session.user.id);
-        setView('HOME'); // Navegación directa al estar logueado
+        fetchWeeklyHabitsHistory(session.user.id);
+        setView('HOME'); 
       }
     });
 
@@ -62,17 +64,43 @@ export default function App() {
         fetchProfile(session.user.id);
         fetchTasks(session.user.id);
         fetchHabits(session.user.id);
-        if (event === 'SIGNED_IN') setView('HOME'); // Navegación directa al loguear
+        fetchWeeklyHabitsHistory(session.user.id);
+        if (event === 'SIGNED_IN') setView('HOME');
       } else {
         setUser(null);
         setProfile(null);
         setTasks([]);
+        setWeeklyHabitsHistory([]);
         if (event === 'SIGNED_OUT') setView('LOGIN');
       }
     });
 
     return () => subscription.unsubscribe();
   }, []);
+
+  const fetchWeeklyHabitsHistory = async (userId: string) => {
+    // Calculamos el inicio de la semana (Lunes)
+    const now = new Date();
+    const day = now.getDay(); // 0(Dom) - 6(Sab)
+    const diff = now.getDate() - day + (day === 0 ? -6 : 1); 
+    const startOfWeek = new Date(now.setDate(diff));
+    startOfWeek.setHours(0, 0, 0, 0);
+
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(startOfWeek.getDate() + 6);
+    endOfWeek.setHours(23, 59, 59, 999);
+
+    const { data, error } = await supabase
+      .from('habitos')
+      .select('fecha, completado')
+      .eq('usuario_id', userId)
+      .gte('fecha', startOfWeek.toISOString().split('T')[0])
+      .lte('fecha', endOfWeek.toISOString().split('T')[0]);
+    
+    if (!error && data) {
+      setWeeklyHabitsHistory(data);
+    }
+  };
 
   const fetchProfile = async (userId: string) => {
     const { data, error } = await supabase
@@ -182,10 +210,12 @@ export default function App() {
   };
 
   const fetchHabits = async (userId: string) => {
+    const today = new Date().toISOString().split('T')[0];
     const { data } = await supabase
       .from('habitos')
       .select('*')
-      .eq('usuario_id', userId);
+      .eq('usuario_id', userId)
+      .eq('fecha', today);
     
     if (data && data.length > 0) {
       setHabits(data.map((h: any) => ({
@@ -193,6 +223,25 @@ export default function App() {
         name: h.nombre,
         completed: h.completado
       })));
+    } else {
+      const defaultHabits = [
+        { nombre: 'Meditar 5m', completado: false, usuario_id: userId, fecha: today },
+        { nombre: 'Beber Agua', completado: false, usuario_id: userId, fecha: today },
+        { nombre: 'Leer', completado: false, usuario_id: userId, fecha: today }
+      ];
+
+      const { data: inserted } = await supabase
+        .from('habitos')
+        .insert(defaultHabits)
+        .select();
+
+      if (inserted) {
+        setHabits(inserted.map((h: any) => ({
+          id: h.id,
+          name: h.nombre,
+          completed: h.completado
+        })));
+      }
     }
   };
 
@@ -308,32 +357,48 @@ export default function App() {
 
   const toggleHabit = async (id: string) => {
     if (!user || !profile) return;
+
     const habit = habits.find(h => h.id === id);
     if (!habit) return;
 
     const newStatus = !habit.completed;
+    const previousHabits = [...habits];
+    const previousProfile = { ...profile };
 
-    const { error } = await supabase
-      .from('habitos')
-      .upsert({ 
-        id: id.length > 20 ? id : undefined, 
-        nombre: habit.name,
-        completado: newStatus,
-        usuario_id: user.id
-      })
-      .select();
+    // 1. Actualización optimista de hábitos y contador
+    setHabits(prev => prev.map(h =>
+      h.id === id ? { ...h, completed: newStatus } : h
+    ));
 
-    if (!error) {
-      setHabits(habits.map(h => 
-        h.id === id ? { ...h, completed: newStatus } : h
-      ));
-      
-      if (newStatus) {
-        // Podríamos sumar XP por hábitos también si el usuario lo desea, 
-        // pero por ahora solo el perfil cuenta tareas.
-        await supabase.from('usuarios').update({ habitos_completados: profile.habitos_completados + 1 }).eq('id', user.id);
-        fetchProfile(user.id);
-      }
+    const currentCompleted = habits.filter(h => h.completed).length;
+    const newCount = newStatus ? currentCompleted + 1 : Math.max(0, currentCompleted - 1);
+    setProfile(p => p ? { ...p, habitos_completados: newCount } : null);
+
+    try {
+      const { error } = await supabase
+        .from('habitos')
+        .update({ completado: newStatus })
+        .eq('id', id)
+        .eq('usuario_id', user.id);
+
+      if (error) throw error;
+
+      // 3. Sincronizar contador global en la tabla de usuarios
+      const { error: userError } = await supabase
+        .from('usuarios')
+        .update({ habitos_completados: newCount })
+        .eq('id', user.id);
+
+      if (userError) throw userError;
+
+      // 4. Actualizar gráfica semanal
+      fetchWeeklyHabitsHistory(user.id);
+
+    } catch (err) {
+      console.error('Error al guardar hábito:', err);
+      // Rollback con el snapshot correcto
+      setHabits(previousHabits);
+      setProfile(previousProfile as UserProfile);
     }
   };
 
@@ -363,6 +428,59 @@ export default function App() {
     }
   };
 
+  const addHabit = async (name: string) => {
+    if (!name.trim() || !user) return;
+    
+    const tempId = Math.random().toString(36).substring(7);
+    const today = new Date().toISOString().split('T')[0]; // Formato YYYY-MM-DD
+    const newHabit = { id: tempId, name: name.trim(), completed: false };
+    setHabits(prev => [...prev, newHabit]);
+
+    const { data, error } = await supabase
+      .from('habitos')
+      .insert([{ 
+        nombre: name.trim(), 
+        completado: false, 
+        usuario_id: user.id,
+        fecha: today
+      }])
+      .select()
+      .single();
+
+    if (!error && data) {
+      setHabits(prev => prev.map(h => h.id === tempId ? { ...h, id: data.id } : h));
+    } else if (error) {
+      console.error("Error al guardar hábito:", error);
+      setHabits(prev => prev.filter(h => h.id !== tempId));
+    }
+  };
+
+  const updateHabit = async (id: string, newName: string) => {
+    if (!newName.trim() || !user) return;
+
+    setHabits(prev => prev.map(h => h.id === id ? { ...h, name: newName.trim() } : h));
+
+    if (id.length > 20) {
+      await supabase
+        .from('habitos')
+        .update({ nombre: newName.trim() })
+        .eq('id', id);
+    }
+  };
+
+  const deleteHabit = async (id: string) => {
+    if (!user) return;
+
+    setHabits(prev => prev.filter(h => h.id !== id));
+
+    if (id.length > 20) {
+      await supabase
+        .from('habitos')
+        .delete()
+        .eq('id', id);
+    }
+  };
+
   return (
     <div className="relative min-h-screen w-full max-w-md mx-auto bg-surface overflow-x-hidden font-sans shadow-2xl">
       <AnimatePresence mode="wait">
@@ -380,11 +498,14 @@ export default function App() {
             deleteTask={deleteTask}
             habits={habits}
             toggleHabit={toggleHabit}
+            addHabit={addHabit}
+            updateHabit={updateHabit}
+            deleteHabit={deleteHabit}
             profile={profile}
           />
         )}
         {view === 'TIMER' && <TimerView key="timer" setView={setView} tasks={tasks} toggleTask={toggleTask} profile={profile} />}
-        {view === 'STATS' && <StatsView key="stats" setView={setView} profile={profile} />}
+        {view === 'STATS' && <StatsView key="stats" setView={setView} profile={profile} habits={habits} toggleHabit={toggleHabit} weeklyHistory={weeklyHabitsHistory} />}
         {view === 'PROFILE' && <ProfileView key="profile" setView={setView} selectedMascotId={selectedMascotId} profile={profile} updateProfileName={updateProfileName} />}
         {view === 'SETTINGS' && <SettingsView key="settings" setView={setView} profile={profile} updateProfileName={updateProfileName} />}
         {view === 'ICONS' && <IconsView key="icons" setView={setView} profile={profile} updateProfileAvatar={updateProfileAvatar} />}
