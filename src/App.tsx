@@ -45,6 +45,7 @@ export default function App() {
     { id: '3', name: 'Leer', completed: false }
   ]);
   const [weeklyHabitsHistory, setWeeklyHabitsHistory] = useState<any[]>([]);
+  const [sessions, setSessions] = useState<any[]>([]);
 
   // Auth Listener
   useEffect(() => {
@@ -55,6 +56,7 @@ export default function App() {
         fetchTasks(session.user.id);
         fetchHabits(session.user.id);
         fetchWeeklyHabitsHistory(session.user.id);
+        fetchSessions(session.user.id);
         setView('HOME'); 
       }
     });
@@ -66,18 +68,57 @@ export default function App() {
         fetchTasks(session.user.id);
         fetchHabits(session.user.id);
         fetchWeeklyHabitsHistory(session.user.id);
+        fetchSessions(session.user.id);
         if (event === 'SIGNED_IN') setView('HOME');
       } else {
         setUser(null);
         setProfile(null);
         setTasks([]);
+        setHabits([]);
         setWeeklyHabitsHistory([]);
+        setSessions([]);
         if (event === 'SIGNED_OUT') setView('LOGIN');
       }
     });
 
     return () => subscription.unsubscribe();
   }, []);
+
+  const fetchSessions = async (userId: string) => {
+    const { data, error } = await supabase
+      .from('sesiones')
+      .select('*')
+      .eq('usuario_id', userId)
+      .order('created_at', { ascending: false });
+    
+    if (!error && data) {
+      setSessions(data);
+    }
+  };
+
+  const addSession = async (taskName: string, durationSeconds: number) => {
+    if (!user) return;
+    
+    const today = new Date().toISOString().split('T')[0];
+    const { data, error } = await supabase
+      .from('sesiones')
+      .insert([
+        {
+          usuario_id: user.id,
+          tarea_nombre: taskName,
+          duracion_segundos: durationSeconds,
+          fecha: today
+        }
+      ])
+      .select()
+      .single();
+
+    if (!error && data) {
+      setSessions(prev => [data, ...prev]);
+    } else {
+      console.error("Error saving session:", error);
+    }
+  };
 
   const fetchWeeklyHabitsHistory = async (userId: string) => {
     // Calculamos el inicio de la semana (Lunes)
@@ -485,7 +526,7 @@ export default function App() {
             profile={profile}
           />
         )}
-        {view === 'TIMER' && <TimerView key="timer" setView={setView} tasks={tasks} toggleTask={toggleTask} profile={profile} />}
+        {view === 'TIMER' && <TimerView key="timer" setView={setView} tasks={tasks} toggleTask={toggleTask} profile={profile} sessions={sessions} addSession={addSession} />}
         {view === 'STATS' && <StatsView key="stats" setView={setView} profile={profile} habits={habits} toggleHabit={toggleHabit} weeklyHistory={weeklyHabitsHistory} />}
         {view === 'PROFILE' && <ProfileView key="profile" setView={setView} selectedMascotId={selectedMascotId} profile={profile} updateProfileName={updateProfileName} />}
         {view === 'SETTINGS' && <SettingsView key="settings" setView={setView} profile={profile} updateProfileName={updateProfileName} />}
