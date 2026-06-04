@@ -50,16 +50,18 @@ export default function App() {
   // Auth Listener
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        setUser(session.user);
-        fetchProfile(session.user.id);
-        fetchTasks(session.user.id);
-        fetchHabits(session.user.id);
-        fetchWeeklyHabitsHistory(session.user.id);
-        fetchSessions(session.user.id);
-        setView('HOME'); 
-      }
-    });
+  if (session?.user) {
+    setUser(session.user);
+    fetchProfile(session.user.id);
+    fetchTasks(session.user.id);
+    fetchHabits(session.user.id);
+    fetchWeeklyHabitsHistory(session.user.id);
+    fetchSessions(session.user.id);
+    setView('HOME'); 
+  } else {
+    setView('LOGIN'); // 👈 esta es la línea nueva
+  }
+});
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (session?.user) {
